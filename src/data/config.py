@@ -1,9 +1,13 @@
+import logging
 import math
+import os, os.path
 # path related
-dataset_root = "../../dataset/ENA"
-feature_dir = "../../dataset/ENA/preprocess"
+dataset_root = "/home/fumchin/data/bsed/dataset/ENA"
+feature_dir = os.path.join(dataset_root, "preprocess")
+
 # audio
 # mel dim (1255, 128)
+# target dim (313, 30)
 sr = 32000
 seg_sec = 10
 n_window = 2048
@@ -23,6 +27,26 @@ median_window_s_classwise = [0.45, 0.45, 0.45, 0.45, 0.45, 2.7, 2.7, 2.7, 0.45, 
 median_window = [max(int(item * out_nb_frames_1s), 1) for item in median_window_s_classwise]
 # max_frames = math.ceil(max_len_seconds * sample_rate / hop_size)
 
+
+in_memory = True
+in_memory_unlab = False
+num_workers = 12
+batch_size = 24
+
+
+n_epoch = 100 #, variance after 100 may be too large
+n_epoch_rampup = 70
+n_epoch_rampdown = 80
+
+checkpoint_epochs = 1
+save_best = True
+early_stopping = None # 20
+es_init_wait = 50  # es for early stopping
+adjust_lr = True
+max_learning_rate = 0.001#0.001  # Used if adjust_lr is True
+default_learning_rate = 0.001#0.001  # Used if adjust_lr is False
+
+
 # bird list
 bird_list = \
 [
@@ -33,3 +57,4 @@ bird_list = \
     "HOWA", "NOFL", "AMGO", "CARW", "BWWA", 
     "LOWA", "RCKI", "YBCU", "SWTH", "WBNU"
 ]
+terminal_level = logging.INFO

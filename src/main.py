@@ -17,23 +17,24 @@ from torch import nn
 from data.dataload import ENA_Dataset
 from data.Transforms import get_transforms
 import data.config as cfg
+from sklearn.model_selection import train_test_split
 
 
 # from data_utils.Desed import DESED
 # from data_utils.DataLoad import DataLoadDf, ConcatDataset, MultiStreamBatchSampler
 # from TestModel import _load_crnn
-# from evaluation_measures import get_predictions, psds_score, compute_psds_from_operating_points, compute_metrics, get_f_measure_by_class
-# from models.CRNN import CRNN_fpn, CRNN, Predictor, Frame_Discriminator, Clip_Discriminator
+from evaluation_measures import get_predictions, psds_score, compute_psds_from_operating_points, compute_metrics, get_f_measure_by_class
+from models.CRNN import CRNN_fpn, CRNN, Predictor, Frame_Discriminator, Clip_Discriminator
 
 
-# from utilities import ramps
-# from utilities.Logger import create_logger
+from utilities import ramps
+from utilities.Logger import create_logger
 # from utilities.Scaler import ScalerPerAudio, Scaler
-# from utilities.utils import SaveBest, to_cuda_if_available, weights_init, AverageMeterSet, EarlyStopping, \
-#     get_durations_df
-# from utilities.ManyHotEncoder import ManyHotEncoder
+from utilities.utils import SaveBest, to_cuda_if_available, weights_init, AverageMeterSet, EarlyStopping, \
+    get_durations_df
+from utilities.ManyHotEncoder import ManyHotEncoder
 
-# from tensorboardX import SummaryWriter
+from tensorboardX import SummaryWriter
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
 
@@ -41,6 +42,8 @@ from torch.autograd import Variable
 import random
 import torch.nn.functional as F
 import collections
+
+
 
 def adjust_learning_rate(optimizer, rampup_value, rampdown_value=1, optimizer_d=None, optimizer_crnn=None, c_epoch=None, rampup_value_adv=None):
     """ adjust the learning rate
@@ -154,9 +157,9 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
         mask_strong: slice or list, mask the batch to get only the strong labeled data (used to calcultate the loss)
         adjust_lr: bool, Whether or not to adjust the learning rate during training (params in config)
     """
-    # log = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
+    log = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
     class_criterion = nn.BCELoss()
-    consistency_criterion = nn.Loss()
+    consistency_criterion = nn.MSELoss()
     class_criterion, consistency_criterion = to_cuda_if_available(class_criterion, consistency_criterion)
 
     domain_acc = []
@@ -197,17 +200,20 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
         meters.update('lr', optimizer.param_groups[0]['lr'])
 
         # Generate DA labels for training discriminator
-        if f_args.level == 'frame':
-            domain_label = torch.zeros((24, 157, 2))
-            domain_label[:18, :, 1] = 1 # target: 1 for axis 1
-            domain_label[18:, :, 0] = 1 # source: 1 for axis 0
-        elif f_args.level == 'clip':
-            domain_label = torch.zeros((24, 2))
-            domain_label[:18, 1] = 1 # target: 1 for axis 1
-            domain_label[18:, 0] = 1 # source: 1 for axis 0
+        if discriminator is not None:
+            if f_args.level == 'frame':
+                domain_label = torch.zeros((24, 157, 2))
+                domain_label[:18, :, 1] = 1 # target: 1 for axis 1
+                domain_label[18:, :, 0] = 1 # source: 1 for axis 0
+            elif f_args.level == 'clip':
+                domain_label = torch.zeros((24, 2))
+                domain_label[:18, 1] = 1 # target: 1 for axis 1
+                domain_label[18:, 0] = 1 # source: 1 for axis 0
+            batch_input, ema_batch_input, target, domain_label = to_cuda_if_available(batch_input, ema_batch_input, target, domain_label)
+        else:
+            batch_input, ema_batch_input, target = to_cuda_if_available(batch_input, ema_batch_input, target)
 
-
-        batch_input, ema_batch_input, target, domain_label = to_cuda_if_available(batch_input, ema_batch_input, target, domain_label)
+        
         # Outputs
         if ema_model != None:
             encoded_x_ema, _ = ema_model(ema_batch_input)
@@ -332,6 +338,16 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
                           f"weak loss: {weak_class_loss} \t rampup_value: {rampup_value}"
                           f"tensor mean: {batch_input.mean()}")
             meters.update('weak_class_loss', weak_class_loss.item())
+        else:
+            weak_class_loss = class_criterion(weak_pred, target_weak)
+            if i == 0:
+                log.debug(f"target: {target.mean(-2)} \n Target_weak: {target_weak} \n "
+                          f"Target weak mask: {target_weak} \n "
+                          f"Target strong mask: {target.sum(-2)}\n"
+                          f"weak loss: {weak_class_loss} \t rampup_value: {rampup_value}"
+                          f"tensor mean: {batch_input.mean()}")
+            meters.update('weak_class_loss', weak_class_loss.item())
+
 
         # Strong BCE loss
         if mask_strong is not None:
@@ -350,7 +366,10 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
                     output_mixed_strong, _ = predictor(encoded_x_strong)
                     loss_func_strong = mixup_criterion(target_a_strong, target_b_strong, lam_strong)
                     mixup_strong_class_loss = loss_func_strong(class_criterion, output_mixed_strong)
-                    meters.update('mixup_strong_class_loss', mixup_strong_class_loss.item())        
+                    meters.update('mixup_strong_class_loss', mixup_strong_class_loss.item())    
+        else:
+            strong_class_loss = class_criterion(strong_pred, target)
+            meters.update('Strong loss', strong_class_loss.item())
 
         # Teacher-student consistency cost
         if ema_model is not None:
@@ -486,9 +505,9 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
 if __name__ == '__main__':
     torch.manual_seed(2020)
     np.random.seed(2020)
-    # logger = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
-    # logger.info("Baseline 2020")
-    # logger.info(f"Starting time: {datetime.datetime.now()}")
+    logger = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
+    logger.info("BSED 2022")
+    logger.info(f"Starting time: {datetime.datetime.now()}")
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-s", '--subpart_data', type=int, default=None, dest="subpart_data",
                         help="Number of files to be used. Useful when testing on small number of files.")
@@ -530,13 +549,13 @@ if __name__ == '__main__':
     saved_model_dir = os.path.join(store_dir, "model")
     saved_pred_dir = os.path.join(store_dir, "predictions")
     start_epoch = 0
-    # if start_epoch == 0:
-    #     writer = SummaryWriter(os.path.join(store_dir, "log"))
-    #     os.makedirs(store_dir, exist_ok=True)
-    #     os.makedirs(saved_model_dir, exist_ok=True)
-    #     os.makedirs(saved_pred_dir, exist_ok=True)
-    # else:
-    #     writer = SummaryWriter(os.path.join(store_dir, "log"), purge_step=start_epoch)
+    if start_epoch == 0:
+        writer = SummaryWriter(os.path.join(store_dir, "log"))
+        os.makedirs(store_dir, exist_ok=True)
+        os.makedirs(saved_model_dir, exist_ok=True)
+        os.makedirs(saved_pred_dir, exist_ok=True)
+    else:
+        writer = SummaryWriter(os.path.join(store_dir, "log"), purge_step=start_epoch)
 
     n_channel = 1
     add_axis_conv = 0
@@ -567,8 +586,8 @@ if __name__ == '__main__':
 
     # # Meta path for psds
     # durations_synth = get_durations_df(cfg.synthetic)
-    # many_hot_encoder = ManyHotEncoder(cfg.classes, n_frames=cfg.max_frames // pooling_time_ratio)
-    # encod_func = many_hot_encoder.encode_strong_df
+    many_hot_encoder = ManyHotEncoder(cfg.bird_list, n_frames=cfg.max_frames // cfg.pooling_time_ratio)
+    encod_func = many_hot_encoder.encode_strong_df
 
     # # Normalisation per audio or on the full dataset
     # if cfg.scaler_type == "dataset":
@@ -588,7 +607,11 @@ if __name__ == '__main__':
     transforms = get_transforms(cfg.max_frames, None, add_axis_conv,
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
-    dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, transform=transforms, compute_log=True)
+    dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
+    train_data, val_data = train_test_split(dataset, random_state=0, train_size=0.8)
+
+    train_dataloader = DataLoader(train_data, batch_size=cfg.batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=True)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)
     # unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms, in_memory=cfg.in_memory_unlab)
     # train_synth_data = DataLoadDf(dfs["train_synthetic"], encod_func, transforms, in_memory=cfg.in_memory)
@@ -746,13 +769,13 @@ if __name__ == '__main__':
                     "kwargs": optim_kwargs,
                     'state_dict': optim_crnn.state_dict()},
             "pooling_time_ratio": pooling_time_ratio,
-            "scaler": {
-                "type": type(scaler).__name__,
-                "args": scaler_args,
-                "state_dict": scaler.state_dict()},
+            # "scaler": {
+            #     "type": type(scaler).__name__,
+            #     "args": scaler_args,
+            #     "state_dict": scaler.state_dict()},
             "many_hot_encoder": many_hot_encoder.state_dict(),
             "median_window": median_window,
-            "desed": dataset.state_dict()
+            # "desed": dataset.state_dict()
         }
     else:
         state = {
@@ -781,13 +804,13 @@ if __name__ == '__main__':
                     "kwargs": optim_kwargs,
                     'state_dict': optim_crnn.state_dict()},
             "pooling_time_ratio": pooling_time_ratio,
-            "scaler": {
-                "type": type(scaler).__name__,
-                "args": scaler_args,
-                "state_dict": scaler.state_dict()},
+            # "scaler": {
+            #     "type": type(scaler).__name__,
+            #     "args": scaler_args,
+            #     "state_dict": scaler.state_dict()},
             "many_hot_encoder": many_hot_encoder.state_dict(),
             "median_window": median_window,
-            "desed": dataset.state_dict()
+            # "desed": dataset.state_dict()
         }
 
     if meanteacher:
@@ -827,27 +850,27 @@ if __name__ == '__main__':
             loss_value = train(training_loader, crnn, optim, epoch, ema_model=crnn_ema, ema_predictor=predictor_ema,
                             mask_weak=weak_mask, mask_strong=strong_mask, adjust_lr=cfg.adjust_lr, predictor=predictor, discriminator=discriminator, optimizer_d=optim_d, optimizer_crnn=optim_crnn, ISP=ISP)            
         else:
-            loss_value = train(training_loader, crnn, optim, epoch,
-                            mask_weak=weak_mask, mask_strong=strong_mask, adjust_lr=cfg.adjust_lr, predictor=predictor, discriminator=discriminator, optimizer_d=optim_d, optimizer_crnn=optim_crnn, ISP=ISP)
+            loss_value = train(train_dataloader, crnn, optim, epoch,
+                            mask_weak=None, mask_strong=None, adjust_lr=cfg.adjust_lr, predictor=predictor, discriminator=discriminator, optimizer_d=optim_d, optimizer_crnn=optim_crnn, ISP=ISP)
 
         # Validation
         crnn.eval()
         predictor.eval()
-        logger.info("\n ### Valid synthetic metric ### \n")
-        predictions = get_predictions(crnn, valid_synth_loader, many_hot_encoder.decode_strong, pooling_time_ratio,
-                                      median_window=median_window, save_predictions=None, predictor=predictor)
-        # Validation with synthetic data (dropping feature_filename for psds)
-        valid_synth = dfs["valid_synthetic"].drop("feature_filename", axis=1)
-        valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)
-        writer.add_scalar('Strong F1-score', valid_synth_f1, epoch)
-        # Real validation data
+        # logger.info("\n ### Valid synthetic metric ### \n")
+        # predictions = get_predictions(crnn, valid_synth_loader, many_hot_encoder.decode_strong, pooling_time_ratio,
+        #                               median_window=median_window, save_predictions=None, predictor=predictor)
+        # # Validation with synthetic data (dropping feature_filename for psds)
+        # valid_synth = dfs["valid_synthetic"].drop("feature_filename", axis=1)
+        # valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)
+        # writer.add_scalar('Strong F1-score', valid_synth_f1, epoch)
+        # # Real validation data
         validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
         durations_validation = get_durations_df(cfg.validation, cfg.audio_validation_dir)
         if f_args.use_fpn:     
-            valid_predictions = get_predictions(crnn, validation_dataloader, many_hot_encoder.decode_strong,
+            valid_predictions = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
                                             pooling_time_ratio, median_window=median_window, predictor=predictor, fpn=True)
         else:
-            valid_predictions = get_predictions(crnn, validation_dataloader, many_hot_encoder.decode_strong,
+            valid_predictions = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
                                             pooling_time_ratio, median_window=median_window, predictor=predictor)
         valid_real_f1, psds_real_f1 = compute_metrics(valid_predictions, validation_labels_df, durations_validation)
         writer.add_scalar('Real Validation F1-score', valid_real_f1, epoch)

@@ -194,6 +194,7 @@ class AugmentGaussianNoise(Transform):
         else:
             raise NotImplementedError("Only (mean, std) or snr can be given")
         return data, noisy_data
+        # return noisy_data
 
 
 class ToTensor(Transform):

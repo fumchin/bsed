@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from glob import glob
 import torch
+# from utilities.ManyHotEncoder import ManyHotEncoder
 import data.config as cfg
 from data.Transforms import get_transforms
 # import config as cfg
@@ -12,8 +13,9 @@ from data.Transforms import get_transforms
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 
+
 class ENA_Dataset(Dataset):
-    def __init__(self, preprocess_dir, transform, compute_log=False):
+    def __init__(self, preprocess_dir, encod_func, transform, compute_log=False):
         self.sample_rate = cfg.sr
         self.preprocess_dir = preprocess_dir
         # self.encode_function = encode_function
@@ -21,6 +23,7 @@ class ENA_Dataset(Dataset):
         self.n_frames = cfg.max_frames // self.pooling_time_ratio
         self.hop_size = cfg.hop_size
         self.transform = transform
+        self.encod_func = encod_func
         
         self.annotation_dir = os.path.join(self.preprocess_dir, "annotation")
         self.feature_dir = os.path.join(self.preprocess_dir, "wav")
@@ -40,9 +43,16 @@ class ENA_Dataset(Dataset):
         annotation_file_path = glob(os.path.join(self.annotation_dir, feature_file_name + ".txt"))[0]
         # read with pandas
         df = pd.read_csv(annotation_file_path, sep="\t")
-        target = self.encode(df)
-        if self.transform:
+        # target = self.encode(df)
+        if self.encod_func is not None:
+            target = self.encod_func(df)
+        else:
+            print("no encoded function")
+
+        if self.transform is not None:
             sample = self.transform((features, target))
+        else:
+            sample = (features, target)
         return sample
         
         
@@ -108,13 +118,16 @@ class ENA_Dataset(Dataset):
         #                             "type given: {}".format(type(label_df)))
         # return y
 if __name__ == "__main__":
-    file_name = "Fuji_train_list.txt"
-    root = "/home/fumchin/data/cv/final/dataset"
+    # file_name = "Fuji_train_list.txt"
+    # root = "/home/fumchin/data/cv/final/dataset"
     n_channel = 1
     add_axis_conv = 0
     transforms = get_transforms(cfg.max_frames, None, add_axis_conv,
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
-    ENA = ENA_Dataset(preprocess_dir="../../dataset/ENA/preprocess", transform=transforms, compute_log=False)
+    # ENA = ENA_Dataset(preprocess_dir="../../dataset/ENA/preprocess", transform=transforms, compute_log=False)
+    many_hot_encoder = ManyHotEncoder(cfg.classes, n_frames=cfg.max_frames // cfg.pooling_time_ratio)
+    encod_func = many_hot_encoder.encode_strong_df
+    ENA = ENA_Dataset(preprocess_dir="../../dataset/ENA/preprocess",encod_func=encod_func, transform=None, compute_log=False)
     train_dataloader = DataLoader(ENA, batch_size=6, shuffle=True)
     a, b = next(iter(train_dataloader))
     print(a, b)
