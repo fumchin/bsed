@@ -4,6 +4,7 @@ import os, os.path
 # path related
 dataset_root = "/home/fumchin/data/bsed/dataset/ENA"
 feature_dir = os.path.join(dataset_root, "preprocess")
+annotation_dir = os.path.join(feature_dir, "annotation")
 
 # audio
 # mel dim (1255, 128)

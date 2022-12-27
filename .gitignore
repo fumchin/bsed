@@ -1,2 +1,3 @@
 dataset/*
 .vscode/
+src/stored_data/

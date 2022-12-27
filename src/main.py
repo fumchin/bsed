@@ -22,7 +22,7 @@ from sklearn.model_selection import train_test_split
 
 # from data_utils.Desed import DESED
 # from data_utils.DataLoad import DataLoadDf, ConcatDataset, MultiStreamBatchSampler
-# from TestModel import _load_crnn
+from TestModel import _load_crnn
 from evaluation_measures import get_predictions, psds_score, compute_psds_from_operating_points, compute_metrics, get_f_measure_by_class
 from models.CRNN import CRNN_fpn, CRNN, Predictor, Frame_Discriminator, Clip_Discriminator
 
@@ -167,7 +167,7 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
     meters = AverageMeterSet()
     log.debug("Nb batches: {}".format(len(train_loader)))
     start = time.time()
-    for i, ((batch_input, ema_batch_input), target) in enumerate(train_loader):
+    for i, (((batch_input, ema_batch_input), target), filename) in enumerate(train_loader):
         if ISP:
             # Generate input random shift feature 
             pooling_time_ratio = 4
@@ -543,12 +543,12 @@ if __name__ == '__main__':
         meanteacher = True
 
     # model_name = 'test_adaptation_FPN'# name your own model
-    model_name = 'fum_CRNN_fpn'# name your own model
+    model_name = 'bsed_test_2'# name your own model
 
     store_dir = os.path.join("stored_data", model_name)
     saved_model_dir = os.path.join(store_dir, "model")
     saved_pred_dir = os.path.join(store_dir, "predictions")
-    start_epoch = 0
+    start_epoch = 68
     if start_epoch == 0:
         writer = SummaryWriter(os.path.join(store_dir, "log"))
         os.makedirs(store_dir, exist_ok=True)
@@ -608,7 +608,7 @@ if __name__ == '__main__':
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
     dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    train_data, val_data = train_test_split(dataset, random_state=0, train_size=0.8)
+    train_data, val_data = train_test_split(dataset, random_state=0, train_size=0.7)
 
     train_dataloader = DataLoader(train_data, batch_size=cfg.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=True)
@@ -856,27 +856,27 @@ if __name__ == '__main__':
         # Validation
         crnn.eval()
         predictor.eval()
-        # logger.info("\n ### Valid synthetic metric ### \n")
-        # predictions = get_predictions(crnn, valid_synth_loader, many_hot_encoder.decode_strong, pooling_time_ratio,
-        #                               median_window=median_window, save_predictions=None, predictor=predictor)
-        # # Validation with synthetic data (dropping feature_filename for psds)
+        logger.info("\n ### Valid synthetic metric ### \n")
+        predictions, valid_synth, durations_synth = get_predictions(crnn, train_dataloader, many_hot_encoder.decode_strong, pooling_time_ratio,
+                                      median_window=median_window, save_predictions=None, predictor=predictor)
+        # Validation with synthetic data (dropping feature_filename for psds)
         # valid_synth = dfs["valid_synthetic"].drop("feature_filename", axis=1)
-        # valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)
-        # writer.add_scalar('Strong F1-score', valid_synth_f1, epoch)
-        # # Real validation data
-        validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
-        durations_validation = get_durations_df(cfg.validation, cfg.audio_validation_dir)
+        valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)
+        writer.add_scalar('Strong F1-score', valid_synth_f1, epoch)
+        # Real validation data
+        # validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
+        # durations_validation = get_durations_df(cfg.validation, cfg.audio_validation_dir)
         if f_args.use_fpn:     
-            valid_predictions = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
+            valid_predictions, validation_labels_df, durations_validation = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
                                             pooling_time_ratio, median_window=median_window, predictor=predictor, fpn=True)
         else:
-            valid_predictions = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
+            valid_predictions, validation_labels_df, durations_validation = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
                                             pooling_time_ratio, median_window=median_window, predictor=predictor)
         valid_real_f1, psds_real_f1 = compute_metrics(valid_predictions, validation_labels_df, durations_validation)
         writer.add_scalar('Real Validation F1-score', valid_real_f1, epoch)
         # Evaluate weak
-        weak_metric = get_f_measure_by_class(crnn, len(cfg.classes), validation_dataloader_weak, predictor=predictor)
-        writer.add_scalar("Weak F1-score macro averaged", np.mean(weak_metric), epoch)  
+        # weak_metric = get_f_measure_by_class(crnn, len(cfg.classes), validation_dataloader_weak, predictor=predictor)
+        # writer.add_scalar("Weak F1-score macro averaged", np.mean(weak_metric), epoch)  
 
         # Update state
         state['model']['state_dict'] = crnn.state_dict()
@@ -884,8 +884,8 @@ if __name__ == '__main__':
         state['optimizer']['state_dict'] = optim.state_dict()
         state['optimizer_crnn']['state_dict'] = optim_crnn.state_dict()
         state['epoch'] = epoch
-        state['valid_metric'] = valid_synth_f1
-        state['valid_f1_psds'] = psds_m_f1
+        # state['valid_metric'] = valid_synth_f1
+        # state['valid_f1_psds'] = psds_m_f1
         if stage == 'adaptation':
             state['model_d']['state_dict'] = discriminator.state_dict()
             state['optimizer_d']['state_dict'] = optim_d.state_dict()
@@ -898,16 +898,28 @@ if __name__ == '__main__':
             model_fname = os.path.join(saved_model_dir, "baseline_epoch_" + str(epoch))
             torch.save(state, model_fname)
 
-        if cfg.save_best:
-            if save_best_cb.apply(valid_synth_f1):
-                model_fname = os.path.join(saved_model_dir, "baseline_best")
-                torch.save(state, model_fname)
-            results.loc[epoch, "global_valid"] = valid_synth_f1
+        # if cfg.save_best:
+        #     if save_best_cb.apply(valid_synth_f1):
+        #         model_fname = os.path.join(saved_model_dir, "baseline_best")
+        #         torch.save(state, model_fname)
+        #     results.loc[epoch, "global_valid"] = valid_synth_f1
+        # results.loc[epoch, "loss"] = loss_value.item()
+        # results.loc[epoch, "valid_synth_f1"] = valid_synth_f1
+
+        # if cfg.early_stopping:
+        #     if early_stopping_call.apply(valid_synth_f1):
+        #         logger.warn("EARLY STOPPING")
+        #         break
+        
+        if save_best_cb.apply(valid_real_f1):
+            model_fname = os.path.join(saved_model_dir, "baseline_best")
+            torch.save(state, model_fname)
+        results.loc[epoch, "global_valid"] = valid_real_f1
         results.loc[epoch, "loss"] = loss_value.item()
-        results.loc[epoch, "valid_synth_f1"] = valid_synth_f1
+        results.loc[epoch, "valid_synth_f1"] = valid_real_f1
 
         if cfg.early_stopping:
-            if early_stopping_call.apply(valid_synth_f1):
+            if early_stopping_call.apply(valid_real_f1):
                 logger.warn("EARLY STOPPING")
                 break
 
@@ -924,17 +936,17 @@ if __name__ == '__main__':
     # ##############
     # Validation
     # ##############
-    crnn.eval()
-    predictor.eval()
-    # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
-    predicitons_fname = os.path.join(saved_pred_dir, "baseline_validation.tsv")
+    # crnn.eval()
+    # predictor.eval()
+    # # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
+    # predicitons_fname = os.path.join(saved_pred_dir, "baseline_validation.tsv")
 
-    # validation_data = DataLoadDf(dfs["validation"], encod_func, transform=transforms_valid, return_indexes=True)
-    # validation_dataloader = DataLoader(validation_data, batch_size=cfg.batch_size, shuffle=False, drop_last=False)
-    # validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
-    # durations_validation = get_durations_df(cfg.validation, cfg.audio_validation_dir)
-    # Preds with only one value
-    valid_predictions = get_predictions(crnn, validation_dataloader, many_hot_encoder.decode_strong,
-                                        pooling_time_ratio, median_window=median_window,
-                                        save_predictions=predicitons_fname, predictor=predictor)
-    compute_metrics(valid_predictions, validation_labels_df, durations_validation)
+    # # validation_data = DataLoadDf(dfs["validation"], encod_func, transform=transforms_valid, return_indexes=True)
+    # # validation_dataloader = DataLoader(validation_data, batch_size=cfg.batch_size, shuffle=False, drop_last=False)
+    # # validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
+    # # durations_validation = get_durations_df(cfg.validation, cfg.audio_validation_dir)
+    # # Preds with only one value
+    # valid_predictions = get_predictions(crnn, validation_dataloader, many_hot_encoder.decode_strong,
+    #                                     pooling_time_ratio, median_window=median_window,
+    #                                     save_predictions=predicitons_fname, predictor=predictor)
+    # compute_metrics(valid_predictions, validation_labels_df, durations_validation)

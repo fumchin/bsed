@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 from os import path as osp
+from glob import glob
 
 import psds_eval
 import scipy
 from dcase_util.data import ProbabilityEncoder
 import sed_eval
 import numpy as np
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 import pandas as pd
 import torch
 from psds_eval import plot_psd_roc, PSDSEval
@@ -16,7 +19,7 @@ from utilities.Logger import create_logger
 from utilities.utils import to_cuda_if_available
 from utilities.ManyHotEncoder import ManyHotEncoder
 import pdb
-import kornia
+# import kornia
 
 logger = create_logger(__name__, terminal_level=cfg.terminal_level)
 
@@ -139,8 +142,9 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
     for threshold in thresholds:
         prediction_dfs[threshold] = pd.DataFrame()
 
+    
     # Get predictions
-    for i, ((input_data, label), indexes) in enumerate(dataloader):
+    for i, (((input_data, label), indexes), filename) in enumerate(dataloader):
         indexes = indexes.numpy()
         # test_lab = decoder(indexes)
         # kk_ = decoder(kk[i,:,:])
@@ -186,15 +190,45 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
                 pred = decoder(pred_strong_m)
                 pred = pd.DataFrame(pred, columns=["event_label", "onset", "offset"])
                 # Put them in seconds
-                pred.loc[:, ["onset", "offset"]] *= pooling_time_ratio / (cfg.sample_rate / cfg.hop_size)
+                pred.loc[:, ["onset", "offset"]] *= pooling_time_ratio / (cfg.sr / cfg.hop_size)
                 pred.loc[:, ["onset", "offset"]] = pred[["onset", "offset"]].clip(0, cfg.max_len_seconds)
 
-                pred["filename"] = dataloader.dataset.filenames.iloc[indexes[j]]
+                # pred["filename"] = dataloader.dataset.filenames.iloc[indexes[j]]
+                pred["filename"] = ""
+                pred.loc[pred["filename"]== "",'filename'] = filename[j]
+                # pred["filename"].fillna(filename[j], inplace=True)
                 prediction_dfs[threshold] = prediction_dfs[threshold].append(pred, ignore_index=True)
 
                 if i == 0 and j == 0:
                     logger.debug("predictions: \n{}".format(pred))
                     logger.debug("predictions strong: \n{}".format(pred_strong_it))
+        
+        # groundtruth file and duration file
+    duration_df = pd.DataFrame(filename, columns=['filename'])
+    duration_df["duration"] = ""
+    duration_df.loc[duration_df["duration"]== "",'duration'] = 10
+    groundtruth_df = None
+    for file_count, file in enumerate(filename):
+        if file_count == 0:
+            groundtruth_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
+            groundtruth_df["filename"] = ""
+            groundtruth_df.loc[groundtruth_df["filename"]== "",'filename'] = file
+        else:
+            temp_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
+            temp_df["filename"] = ""
+            temp_df.loc[temp_df["filename"]== "",'filename'] = file
+            groundtruth_df = pd.concat([groundtruth_df, temp_df], ignore_index=True)
+            
+    groundtruth_df.rename(columns = {'Begin Time (s)':'onset', 'End Time (s)':'offset', 'Species':'event_label'}, inplace = True)
+    # duration_filename = filename+".wav"
+    # duration_df = duration_df.append({'filename':(duration_filename), 'duration':int(10)}, ignore_index=True)
+    # if i == 0:
+    #     groundtruth_df = pd.read_csv(osp.join(cfg.annotation_dir, filename+'.txt'), sep="\t")
+    # else:
+    #     temp_df = pd.read_csv(osp.join(cfg.annotation_dir, filename+'.txt'), sep="\t")
+    #     groundtruth_df = pd.concat([groundtruth_df, temp_df], ignore_index=True)
+
+
 
     # Save predictions
     if save_predictions is not None:
@@ -229,7 +263,7 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
     if del_model:
         del model
     
-    return list_predictions
+    return list_predictions, groundtruth_df, duration_df
 
 
 # def psds_score(psds):

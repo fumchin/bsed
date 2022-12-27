@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 from glob import glob
 import torch
-# from utilities.ManyHotEncoder import ManyHotEncoder
 import data.config as cfg
 from data.Transforms import get_transforms
 # import config as cfg
@@ -47,13 +46,14 @@ class ENA_Dataset(Dataset):
         if self.encod_func is not None:
             target = self.encod_func(df)
         else:
+            target = self.encode(df)
             print("no encoded function")
 
         if self.transform is not None:
             sample = self.transform((features, target))
         else:
             sample = (features, target)
-        return sample
+        return (sample, feature_file_name)
         
         
         pass
@@ -125,9 +125,9 @@ if __name__ == "__main__":
     transforms = get_transforms(cfg.max_frames, None, add_axis_conv,
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     # ENA = ENA_Dataset(preprocess_dir="../../dataset/ENA/preprocess", transform=transforms, compute_log=False)
-    many_hot_encoder = ManyHotEncoder(cfg.classes, n_frames=cfg.max_frames // cfg.pooling_time_ratio)
-    encod_func = many_hot_encoder.encode_strong_df
-    ENA = ENA_Dataset(preprocess_dir="../../dataset/ENA/preprocess",encod_func=encod_func, transform=None, compute_log=False)
+    # many_hot_encoder = ManyHotEncoder(cfg.classes, n_frames=cfg.max_frames // cfg.pooling_time_ratio)
+    # encod_func = many_hot_encoder.encode_strong_df
+    ENA = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=None, transform=None, compute_log=False)
     train_dataloader = DataLoader(ENA, batch_size=6, shuffle=True)
     a, b = next(iter(train_dataloader))
     print(a, b)
