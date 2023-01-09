@@ -36,12 +36,12 @@ def _load_crnn(state, model_name="model", use_fpn=False):
     else:
         crnn = CRNN(*crnn_args, **crnn_kwargs)
 
-    if "ADDA" in model_path:
-        if not use_fpn:
-            for key in list(expe_state["model"]["state_dict"].keys()):
-                if 'cnn.' in key:
-                    expe_state["model"]["state_dict"][key.replace('cnn.', 'cnn.cnn.')] = expe_state["model"]["state_dict"][key]
-                    del expe_state["model"]["state_dict"][key]
+    # if "ADDA" in model_path:
+    if not use_fpn:
+        for key in list(expe_state["model"]["state_dict"].keys()):
+            if 'cnn.' in key:
+                expe_state["model"]["state_dict"][key.replace('cnn.', 'cnn.cnn.')] = expe_state["model"]["state_dict"][key]
+                del expe_state["model"]["state_dict"][key]
 
     crnn.load_state_dict(state[model_name]["state_dict"])
     crnn.eval()

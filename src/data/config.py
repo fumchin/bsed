@@ -32,7 +32,7 @@ median_window = [max(int(item * out_nb_frames_1s), 1) for item in median_window_
 in_memory = True
 in_memory_unlab = False
 num_workers = 12
-batch_size = 24
+batch_size = 36
 
 
 n_epoch = 100 #, variance after 100 may be too large

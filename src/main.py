@@ -503,6 +503,7 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
 
 
 if __name__ == '__main__':
+    CUDA_VISIBLE_DEVICES=1
     torch.manual_seed(2020)
     np.random.seed(2020)
     logger = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
@@ -543,12 +544,12 @@ if __name__ == '__main__':
         meanteacher = True
 
     # model_name = 'test_adaptation_FPN'# name your own model
-    model_name = 'bsed_test_2'# name your own model
+    model_name = 'bsed_test_no_intersect'# name your own model
 
     store_dir = os.path.join("stored_data", model_name)
     saved_model_dir = os.path.join(store_dir, "model")
     saved_pred_dir = os.path.join(store_dir, "predictions")
-    start_epoch = 68
+    start_epoch = 0
     if start_epoch == 0:
         writer = SummaryWriter(os.path.join(store_dir, "log"))
         os.makedirs(store_dir, exist_ok=True)
@@ -608,10 +609,10 @@ if __name__ == '__main__':
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
     dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    train_data, val_data = train_test_split(dataset, random_state=0, train_size=0.7)
+    train_data, val_data = train_test_split(dataset, random_state=810, train_size=0.8)
 
     train_dataloader = DataLoader(train_data, batch_size=cfg.batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=False)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)
     # unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms, in_memory=cfg.in_memory_unlab)
     # train_synth_data = DataLoadDf(dfs["train_synthetic"], encod_func, transforms, in_memory=cfg.in_memory)
@@ -857,8 +858,9 @@ if __name__ == '__main__':
         crnn.eval()
         predictor.eval()
         logger.info("\n ### Valid synthetic metric ### \n")
+        saved_path_list = [os.path.join("./stored_data", model_name, "predictions", "result.csv")]
         predictions, valid_synth, durations_synth = get_predictions(crnn, train_dataloader, many_hot_encoder.decode_strong, pooling_time_ratio,
-                                      median_window=median_window, save_predictions=None, predictor=predictor)
+                                      median_window=median_window, save_predictions=saved_path_list, predictor=predictor)
         # Validation with synthetic data (dropping feature_filename for psds)
         # valid_synth = dfs["valid_synthetic"].drop("feature_filename", axis=1)
         valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)

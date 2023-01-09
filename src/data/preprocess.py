@@ -9,7 +9,9 @@ import numpy as np
 
 
 import config as cfg
-
+import warnings
+# from pandas.core.common import SettingWithCopyWarning
+# warnings.filterwarnings('ignore', category=SettingWithCopyWarning)
 def preprocess(audio, compute_log=False):
     ham_win = np.hamming(cfg.n_window)
     mel_min_max_freq = (cfg.mel_f_min, cfg.mel_f_max)
@@ -58,6 +60,45 @@ def overlap(df, time):
     df_result = pd.concat([df_non_overlap, df_overlap], axis=0, ignore_index=True)
     
     return df_result
+
+def same_species_overlap(df):
+    if(len(df.index) == 0):
+        return df
+    df = df.sort_values(by=['Species', 'Begin Time (s)'])
+    result_df = None
+    species_list = df["Species"].unique()
+    for count, current_species in enumerate(species_list):
+        current_df = df.loc[df['Species'] == current_species]
+        current_df["group"]=(current_df["Begin Time (s)"]>current_df["End Time (s)"].shift().cummax()).cumsum()
+        current_result=current_df.groupby("group").agg({"Begin Time (s)":"min", "End Time (s)": "max"}).reset_index()
+        current_result["Species"] = current_species
+        current_result = current_result.drop("group", axis=1)
+        if count == 0:
+            result_df = current_result
+        else:
+            result_df = pd.concat([result_df, current_result], axis=0, ignore_index=True)
+    
+    return result_df
+    pass
+
+def over(df):
+    result_df = None
+    species_list = df["Species"].unique()
+    for count, current_species in enumerate(species_list):
+        current_df = df.loc[df['Species'] == current_species]
+        current_df = current_df.sort_values(by=['Begin Time (s)'])
+        current_df = current_df.reset_index(drop=True)
+        # current_df
+        min = current_df.loc[0, "Begin Time (s)"]
+        max = current_df.loc[0, "End Time (s)"]
+        for i in range(len(current_df.index)-1,0, -1):
+            if (current_df.loc[i, "Begin Time (s)"] > min and current_df.loc[i, "End Time (s)"]<max):
+                current_df = current_df.drop([i])
+        if count == 0:
+                result_df = current_df
+        else:
+            result_df = pd.concat([result_df, current_df], axis=0, ignore_index=True)
+    return result_df
 
 if __name__ == '__main__':
     dataset_root = cfg.dataset_root
@@ -120,13 +161,19 @@ if __name__ == '__main__':
                 df_current_filter["Begin Time (s)"] = df_current_filter["Begin Time (s)"] - current_time_min
                 df_current_filter["End Time (s)"] = df_current_filter["End Time (s)"] - current_time_min
                 
-                df_current_filter = df_current_filter.sort_values(by=['Begin Time (s)'])
-                df_current_filter = df_current_filter.drop_duplicates()
+                
+                # same species but overlap
+                df_current_filter_2 = same_species_overlap(df = df_current_filter)
+                df_current_filter_2 = over(df = df_current_filter_2)
+                # df_current_filter = df_current_filter.sort_values(by=['Begin Time (s)'])
+                if df_current_filter_2 is None:
+                    df_current_filter_2 = pd.DataFrame(columns=["Begin Time (s)", "End Time (s)", "Species"])
+                df_current_filter_2 = df_current_filter_2.drop_duplicates()
                 # save mel spectrogram
                 np.save(os.path.join(mel_saved_path, wav_name + "_" + str(count)), mel)
                 
                 # save annotation file
-                df_current_filter.to_csv(os.path.join(annotation_saved_path, wav_name + "_" + str(count) + ".txt"), sep="\t", index=False)
+                df_current_filter_2.to_csv(os.path.join(annotation_saved_path, wav_name + "_" + str(count) + ".txt"), sep="\t", index=False)
             
             # print(domain_name + " done")
     print("end")

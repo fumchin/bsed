@@ -314,8 +314,8 @@ def get_transforms(frames, scaler=None, add_axis=0, noise_dict_params=None, comb
         transf.append(AugmentGaussianNoise(**noise_dict_params))
 
     # transf.extend([PadOrTrunc(nb_frames=frames), ApplyLog(), ToTensor(unsqueeze_axis=unsqueeze_axis), Minmax_normalization()]) # doing padding first is reasonable, also try to add min-max nomralization
-    # transf.extend([ApplyLog(), PadOrTrunc(nb_frames=frames), ToTensor(unsqueeze_axis=unsqueeze_axis)])
-    transf.extend([PadOrTrunc(nb_frames=frames), ToTensor(unsqueeze_axis=unsqueeze_axis)])
+    transf.extend([ApplyLog(), PadOrTrunc(nb_frames=frames), ToTensor(unsqueeze_axis=unsqueeze_axis)])
+    # transf.extend([PadOrTrunc(nb_frames=frames), ToTensor(unsqueeze_axis=unsqueeze_axis)])
     if scaler is not None:
         transf.append(Normalize(scaler=scaler))
 
