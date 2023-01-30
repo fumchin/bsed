@@ -34,8 +34,8 @@ in_memory_unlab = False
 num_workers = 12
 batch_size = 36
 
-
-n_epoch = 100 #, variance after 100 may be too large
+model_name = "CRNN_fpn_0109"
+n_epoch = 250 #, variance after 100 may be too large
 n_epoch_rampup = 70
 n_epoch_rampdown = 80
 

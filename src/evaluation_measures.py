@@ -142,7 +142,7 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
     for threshold in thresholds:
         prediction_dfs[threshold] = pd.DataFrame()
 
-    
+    filename_list = []
     # Get predictions
     for i, (((input_data, label), indexes), filename) in enumerate(dataloader):
         indexes = indexes.numpy()
@@ -203,12 +203,15 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
                     logger.debug("predictions: \n{}".format(pred))
                     logger.debug("predictions strong: \n{}".format(pred_strong_it))
         
+        filename_list = filename_list + list(filename)
         # groundtruth file and duration file
-    duration_df = pd.DataFrame(filename, columns=['filename'])
+    filename_list = list(dict.fromkeys(filename_list))
+    duration_df = pd.DataFrame(filename_list, columns=['filename'])
+    # duration_df.drop_duplicates(inplace=True)
     duration_df["duration"] = ""
     duration_df.loc[duration_df["duration"]== "",'duration'] = 10
     groundtruth_df = None
-    for file_count, file in enumerate(filename):
+    for file_count, file in enumerate(filename_list):
         if file_count == 0:
             groundtruth_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
             groundtruth_df["filename"] = ""
@@ -302,8 +305,8 @@ def compute_sed_eval_metrics(predictions, groundtruth):
     metric_event = event_based_evaluation_df(groundtruth, predictions, t_collar=0.200,
                                              percentage_of_length=0.2)
     metric_segment = segment_based_evaluation_df(groundtruth, predictions, time_resolution=1.)
-    logger.info(metric_event)
     logger.info(metric_segment)
+    logger.info(metric_event)
 
     return metric_event
 

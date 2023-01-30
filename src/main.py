@@ -544,7 +544,7 @@ if __name__ == '__main__':
         meanteacher = True
 
     # model_name = 'test_adaptation_FPN'# name your own model
-    model_name = 'bsed_test_no_intersect'# name your own model
+    model_name = cfg.model_name # name your own model
 
     store_dir = os.path.join("stored_data", model_name)
     saved_model_dir = os.path.join(store_dir, "model")
@@ -868,6 +868,7 @@ if __name__ == '__main__':
         # Real validation data
         # validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
         # durations_validation = get_durations_df(cfg.validation, cfg.audio_validation_dir)
+        logger.info("\n ### Real validation metric ### \n")
         if f_args.use_fpn:     
             valid_predictions, validation_labels_df, durations_validation = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
                                             pooling_time_ratio, median_window=median_window, predictor=predictor, fpn=True)
