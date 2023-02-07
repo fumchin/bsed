@@ -1,3 +1,7 @@
-dataset/*
+# dataset/*
+*.wav
+*.mp3
+*.txt
+*.npy
 .vscode/
 src/stored_data/
