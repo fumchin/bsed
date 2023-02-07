@@ -3,5 +3,6 @@
 *.mp3
 *.txt
 *.npy
+*.csv
 .vscode/
 src/stored_data/
