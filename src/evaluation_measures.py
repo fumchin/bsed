@@ -494,12 +494,18 @@ def compute_psds_from_operating_points(list_predictions, groundtruth_df, meta_df
         psds.add_operating_point(prediction_df)
     return psds
 
-
+def print_ct_matrix(ct_matrix):
+    for r in ct_matrix:
+        for c in r:
+            print(str(int(c)),end = "  ")
+        print()
+    
 def compute_metrics(predictions, gtruth_df, meta_df):
     events_metric = compute_sed_eval_metrics(predictions, gtruth_df)
     macro_f1_event = events_metric.results_class_wise_average_metrics()['f_measure']['f_measure']
     dtc_threshold, gtc_threshold, cttc_threshold = 0.5, 0.5, 0.3
     psds = PSDSEval(dtc_threshold, gtc_threshold, cttc_threshold, ground_truth=gtruth_df, metadata=meta_df)
-    psds_macro_f1, psds_f1_classes = psds.compute_macro_f_score(predictions)
+    ct_matrix, psds_macro_f1, psds_f1_classes = psds.compute_macro_f_score(predictions)
     logger.info(f"F1_score (psds_eval) accounting cross triggers: {psds_macro_f1}")
-    return macro_f1_event, psds_macro_f1
+    # print_ct_matrix(ct_matrix)
+    return ct_matrix, macro_f1_event, psds_macro_f1

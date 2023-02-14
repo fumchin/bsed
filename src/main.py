@@ -44,6 +44,8 @@ import torch.nn.functional as F
 import collections
 
 
+def print_ct_matrix(ct_matrix):
+    print('\n'.join([''.join(['{:5}'.format(int(item)) for item in row]) for row in ct_matrix]))
 
 def adjust_learning_rate(optimizer, rampup_value, rampdown_value=1, optimizer_d=None, optimizer_crnn=None, c_epoch=None, rampup_value_adv=None):
     """ adjust the learning rate
@@ -611,8 +613,8 @@ if __name__ == '__main__':
     dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     syn_dataset = SYN_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     train_data, val_data = train_test_split(dataset, random_state=810, train_size=0.8)
-
-    train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
+    train_dataset = train_data
+    # train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
     train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=False)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)
@@ -865,7 +867,7 @@ if __name__ == '__main__':
                                       median_window=median_window, save_predictions=saved_path_list, predictor=predictor)
         # Validation with synthetic data (dropping feature_filename for psds)
         # valid_synth = dfs["valid_synthetic"].drop("feature_filename", axis=1)
-        valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)
+        ct_matrix, valid_synth_f1, psds_m_f1 = compute_metrics(predictions, valid_synth, durations_synth)
         writer.add_scalar('Strong F1-score', valid_synth_f1, epoch)
         # Real validation data
         # validation_labels_df = dfs["validation"].drop("feature_filename", axis=1)
@@ -877,8 +879,10 @@ if __name__ == '__main__':
         else:
             valid_predictions, validation_labels_df, durations_validation = get_predictions(crnn, val_dataloader, many_hot_encoder.decode_strong,
                                             pooling_time_ratio, median_window=median_window, predictor=predictor)
-        valid_real_f1, psds_real_f1 = compute_metrics(valid_predictions, validation_labels_df, durations_validation)
+        ct_matrix, valid_real_f1, psds_real_f1 = compute_metrics(valid_predictions, validation_labels_df, durations_validation)
         writer.add_scalar('Real Validation F1-score', valid_real_f1, epoch)
+        print("cross-trigger confusion matrix")
+        print_ct_matrix(ct_matrix)
         # Evaluate weak
         # weak_metric = get_f_measure_by_class(crnn, len(cfg.classes), validation_dataloader_weak, predictor=predictor)
         # writer.add_scalar("Weak F1-score macro averaged", np.mean(weak_metric), epoch)  
