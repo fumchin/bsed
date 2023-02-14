@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 
-import data.config as cfg
+import config as cfg
 import warnings
 # from pandas.core.common import SettingWithCopyWarning
 # warnings.filterwarnings('ignore', category=SettingWithCopyWarning)
