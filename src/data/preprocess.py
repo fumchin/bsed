@@ -100,9 +100,7 @@ def over(df):
             result_df = pd.concat([result_df, current_df], axis=0, ignore_index=True)
     return result_df
 
-if __name__ == '__main__':
-    dataset_root = cfg.dataset_root
-    
+def ena_data_preprocess(dataset_root):
     annotation_path = os.path.join(dataset_root, "annotation")
     recording_path = os.path.join(dataset_root, "wav")
     domain_name_list = [name for name in os.listdir(annotation_path) if "Recording" in name]
@@ -177,3 +175,12 @@ if __name__ == '__main__':
             
             # print(domain_name + " done")
     print("end")
+    # pass
+def syn_data_preprocess():
+    pass
+
+
+if __name__ == '__main__':
+    dataset_root = cfg.dataset_root
+    ena_data_preprocess(cfg.dataset_root)
+    syn_data_preprocess()

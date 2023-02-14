@@ -14,7 +14,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn
 
-from data.dataload import ENA_Dataset
+from data.dataload import ENA_Dataset, SYN_Dataset
 from data.Transforms import get_transforms
 import data.config as cfg
 from sklearn.model_selection import train_test_split
@@ -503,7 +503,7 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
 
 
 if __name__ == '__main__':
-    CUDA_VISIBLE_DEVICES=1
+    # CUDA_VISIBLE_DEVICES=1
     torch.manual_seed(2020)
     np.random.seed(2020)
     logger = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
@@ -609,9 +609,11 @@ if __name__ == '__main__':
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
     dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
+    syn_dataset = SYN_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     train_data, val_data = train_test_split(dataset, random_state=810, train_size=0.8)
 
-    train_dataloader = DataLoader(train_data, batch_size=cfg.batch_size, shuffle=True)
+    train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
+    train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=False)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)
     # unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms, in_memory=cfg.in_memory_unlab)

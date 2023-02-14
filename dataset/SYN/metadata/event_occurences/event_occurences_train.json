@@ -1,29 +1,48 @@
 {
     "RCKI": {
-      "proba": 0.5,
+      "proba": 0.3,
       "co-occurences": {
-        "max_events": 13,
-        "mean_events": 4,
+        "max_events": 5,
+        "mean_events": 2,
         "classes": [
-            "WBNU"
+            "WBNU",
+            "AMGO"
         ],
         "probas": [
-            1
+            0.5,
+            0.5
         ]
         } 
     },
     "WBNU": {
-        "proba": 0.5,
+        "proba": 0.3,
         "co-occurences": {
-          "max_events": 13,
-          "mean_events": 4,
+          "max_events": 5,
+          "mean_events": 2,
           "classes": [
-              "RCKI"
+              "RCKI",
+              "AMGO"
           ],
           "probas": [
-              1
+              0.5,
+              0.5
           ]
           } 
-      }
+      },
+      "AMGO": {
+          "proba": 0.4,
+          "co-occurences": {
+            "max_events": 5,
+            "mean_events": 2,
+            "classes": [
+                "RCKI",
+                "WBNU"
+            ],
+            "probas": [
+                0.5,
+                0.5
+            ]
+            } 
+        }
 }
   
