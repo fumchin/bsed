@@ -15,5 +15,6 @@ if __name__ == '__main__':
             if ext == ".mp3":
                 mp3_sound = AudioSegment.from_mp3(audio_file_path)
                 #rename them using the old name + ".wav"
+                mp3_sound.set_frame_rate(cfg.sr)
                 mp3_sound.export(os.path.join(current_folder, "{0}.wav".format(name)), format="wav")
                 os.remove(audio_file_path)

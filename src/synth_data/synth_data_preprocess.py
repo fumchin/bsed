@@ -41,6 +41,44 @@ def preprocess(audio, compute_log=False):
     
     return mel_spec
 
+def same_species_overlap(df):
+    if(len(df.index) == 0):
+        return df
+    df = df.sort_values(by=['event_label', 'onset'])
+    result_df = None
+    species_list = df["event_label"].unique()
+    for count, current_species in enumerate(species_list):
+        current_df = df.loc[df['event_label'] == current_species]
+        current_df["group"]=(current_df["onset"]>current_df["offset"].shift().cummax()).cumsum()
+        current_result=current_df.groupby("group").agg({"onset":"min", "offset": "max"}).reset_index()
+        current_result["event_label"] = current_species
+        current_result = current_result.drop("group", axis=1)
+        if count == 0:
+            result_df = current_result
+        else:
+            result_df = pd.concat([result_df, current_result], axis=0, ignore_index=True)
+    
+    return result_df
+
+def over(df):
+    result_df = None
+    species_list = df["event_label"].unique()
+    for count, current_species in enumerate(species_list):
+        current_df = df.loc[df['event_label'] == current_species]
+        current_df = current_df.sort_values(by=['onset'])
+        current_df = current_df.reset_index(drop=True)
+        # current_df
+        min = current_df.loc[0, "onset"]
+        max = current_df.loc[0, "offset"]
+        for i in range(len(current_df.index)-1,0, -1):
+            if (current_df.loc[i, "onset"] > min and current_df.loc[i, "offset"]<max):
+                current_df = current_df.drop([i])
+        if count == 0:
+                result_df = current_df
+        else:
+            result_df = pd.concat([result_df, current_df], axis=0, ignore_index=True)
+    return result_df
+
 def syn_preprocess(generated_folder, syn_preprocess_folder):
     preprocess_mel_folder = os.path.join(syn_preprocess_folder, "wav")
     preprocess_annotation_folder = os.path.join(syn_preprocess_folder, "annotation")
@@ -67,7 +105,9 @@ def syn_preprocess(generated_folder, syn_preprocess_folder):
         print(audio_file)
         df_extract = annotation_df.loc[annotation_df["filename"] == audio_file]
         df_extract = df_extract.drop(["filename"],axis=1)
-        df_extract.to_csv(os.path.join(preprocess_annotation_folder, audio_file_name), sep="\t", index=False)
+        df_final = same_species_overlap(df_extract)
+        df_final = over(df_final)
+        df_final.to_csv(os.path.join(preprocess_annotation_folder, audio_file_name+".txt"), sep="\t", index=False)
     # print(annotation_df)
     # print(audio_file_list)
     pass
