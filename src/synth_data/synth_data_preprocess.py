@@ -175,7 +175,7 @@ if __name__ == '__main__':
 
         # ##
         # Post processing
-        rm_high_polyphony(generated_folder, max_polyphony=2)
+        rm_high_polyphony(generated_folder, max_polyphony=4)
         # concat same labels overlapping
         post_process_txt_labels(generated_folder,
                                 output_folder=generated_folder,

@@ -3,7 +3,7 @@ import os, os.path
 clip_duration = 10.0
 sr = 32000
 ref_db = -55
-n_soundscapes = 100
+n_soundscapes = 500
 random_seed = 2023
 
 
