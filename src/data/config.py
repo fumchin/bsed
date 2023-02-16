@@ -8,9 +8,12 @@ annotation_dir = os.path.join(feature_dir, "annotation")
 
 syn_feature_dir = os.path.join("/home/fumchin/data/bsed/dataset/SYN", "preprocess")
 
-synth_dataset_root = "/home/fumchin/data/bsed/dataset/NIP4"
+synth_dataset_root = "/home/fumchin/data/bsed/dataset/SYN"
+synth_feature_dir = os.path.join(synth_dataset_root, "preprocess")
 synth_annotation_dir = os.path.join(synth_dataset_root, "annotation")
 synth_audio_dir = os.path.join(synth_dataset_root, "NIPS4B_BIRD_CHALLENGE_TRAIN_TEST_WAV")
+
+syn_or_not = True
 
 # audio
 # mel dim (1255, 128)
@@ -40,7 +43,7 @@ in_memory_unlab = False
 num_workers = 12
 batch_size = 36
 
-model_name = "CRNN_0214_fpn"
+model_name = "CRNN_0216_fpn_syn"
 n_epoch = 250 #, variance after 100 may be too large
 n_epoch_rampup = 70
 n_epoch_rampdown = 80

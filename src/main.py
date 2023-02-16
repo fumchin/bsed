@@ -611,10 +611,14 @@ if __name__ == '__main__':
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
     dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    syn_dataset = SYN_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    train_data, val_data = train_test_split(dataset, random_state=810, train_size=0.8)
-    train_dataset = train_data
-    # train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
+    syn_dataset = SYN_Dataset(preprocess_dir=cfg.synth_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
+    train_data, val_data = train_test_split(dataset, random_state=810, train_size=0.75)
+    
+    if cfg.syn_or_not == True:
+        train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
+    else:
+        train_dataset = train_data
+    
     train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=False)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)

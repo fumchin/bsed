@@ -5,5 +5,6 @@
 *.npy
 *.csv
 *.pyc
+*.jams
 .vscode/
 src/stored_data/

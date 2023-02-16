@@ -21,7 +21,7 @@
           "duration": 10.0,
           "value": {
             "label": "NIP4",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile632.wav",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile129.wav",
             "source_time": 0,
             "event_time": 0,
             "event_duration": 10.0,
@@ -33,15 +33,15 @@
           "confidence": 1.0
         },
         {
-          "time": 4.430433738635642,
-          "duration": 5.569566261364358,
+          "time": 5.448867773648346,
+          "duration": 4.383479,
           "value": {
             "label": "RCKI",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC229048 - Ruby-crowned Kinglet - Regulus calendula.wav",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC628827_3 - Ruby-crowned Kinglet - Regulus calendula calendula.wav",
             "source_time": 0,
-            "event_time": 4.430433738635642,
-            "event_duration": 5.569566261364358,
-            "snr": 22.112757154567213,
+            "event_time": 5.448867773648346,
+            "event_duration": 4.383479,
+            "snr": 8.82990415788533,
             "role": "foreground",
             "pitch_shift": null,
             "time_stretch": null
@@ -63,7 +63,7 @@
               ],
               [
                 "const",
-                "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC229048 - Ruby-crowned Kinglet - Regulus calendula.wav"
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC628827_3 - Ruby-crowned Kinglet - Regulus calendula calendula.wav"
               ],
               [
                 "const",
@@ -71,11 +71,11 @@
               ],
               [
                 "const",
-                4.430433738635642
+                5.448867773648346
               ],
               [
                 "const",
-                5.569566261364358
+                4.383479
               ],
               [
                 "uniform",
@@ -95,7 +95,7 @@
               ],
               [
                 "const",
-                "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile632.wav"
+                "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile129.wav"
               ],
               [
                 "const",
@@ -134,7 +134,7 @@
           "fade_out_len": 0.01,
           "n_events": 1,
           "polyphony_max": 1,
-          "polyphony_gini": 0.5570007953307085,
+          "polyphony_gini": 0.4380012831020932,
           "allow_repeated_label": true,
           "allow_repeated_source": true,
           "reverb": null,

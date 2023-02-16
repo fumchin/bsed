@@ -21,7 +21,7 @@
           "duration": 10.0,
           "value": {
             "label": "NIP4",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile374.wav",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile661.wav",
             "source_time": 0,
             "event_time": 0,
             "event_duration": 10.0,
@@ -33,15 +33,31 @@
           "confidence": 1.0
         },
         {
-          "time": 1.643365147194422,
-          "duration": 4.512,
+          "time": 1.8229763269049146,
+          "duration": 0.739437,
+          "value": {
+            "label": "AMGO",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC582147_3_0 - American Goldfinch - Spinus tristis.wav",
+            "source_time": 0,
+            "event_time": 1.8229763269049146,
+            "event_duration": 0.739437,
+            "snr": 24.152746894075296,
+            "role": "foreground",
+            "pitch_shift": null,
+            "time_stretch": null
+          },
+          "confidence": 1.0
+        },
+        {
+          "time": 3.382041528017237,
+          "duration": 0.8828958333333333,
           "value": {
             "label": "WBNU",
             "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC451418 - White-breasted Nuthatch - Sitta carolinensis.wav",
             "source_time": 0,
-            "event_time": 1.643365147194422,
-            "event_duration": 4.512,
-            "snr": 15.668079620105761,
+            "event_time": 3.382041528017237,
+            "event_duration": 0.8828958333333333,
+            "snr": 29.818553098218686,
             "role": "foreground",
             "pitch_shift": null,
             "time_stretch": null
@@ -49,15 +65,15 @@
           "confidence": 1.0
         },
         {
-          "time": 4.581021295300507,
-          "duration": 5.418978704699493,
+          "time": 5.224286979290272,
+          "duration": 0.378,
           "value": {
             "label": "AMGO",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC612292 - American Goldfinch - Spinus tristis.wav",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC612292_1_2 - American Goldfinch - Spinus tristis.wav",
             "source_time": 0,
-            "event_time": 4.581021295300507,
-            "event_duration": 5.418978704699493,
-            "snr": 28.882704500469554,
+            "event_time": 5.224286979290272,
+            "event_duration": 0.378,
+            "snr": 15.78278200955,
             "role": "foreground",
             "pitch_shift": null,
             "time_stretch": null
@@ -65,15 +81,95 @@
           "confidence": 1.0
         },
         {
-          "time": 8.198109638913449,
-          "duration": 1.801890361086551,
+          "time": 5.494896659624892,
+          "duration": 0.399354,
+          "value": {
+            "label": "AMGO",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC612292_1_3 - American Goldfinch - Spinus tristis.wav",
+            "source_time": 0,
+            "event_time": 5.494896659624892,
+            "event_duration": 0.399354,
+            "snr": 29.776340775895715,
+            "role": "foreground",
+            "pitch_shift": null,
+            "time_stretch": null
+          },
+          "confidence": 1.0
+        },
+        {
+          "time": 6.732740763169459,
+          "duration": 0.17573696145124718,
+          "value": {
+            "label": "WBNU",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC72047 - White-breasted Nuthatch - Sitta carolinensis alexandrae_1.wav",
+            "source_time": 0,
+            "event_time": 6.732740763169459,
+            "event_duration": 0.17573696145124718,
+            "snr": 27.02129696216475,
+            "role": "foreground",
+            "pitch_shift": null,
+            "time_stretch": null
+          },
+          "confidence": 1.0
+        },
+        {
+          "time": 6.9688509853336065,
+          "duration": 2.55675,
+          "value": {
+            "label": "WBNU",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC443271 - White-breasted Nuthatch - Sitta carolinensis aculeata.wav",
+            "source_time": 0,
+            "event_time": 6.9688509853336065,
+            "event_duration": 2.55675,
+            "snr": 11.068761107499459,
+            "role": "foreground",
+            "pitch_shift": null,
+            "time_stretch": null
+          },
+          "confidence": 1.0
+        },
+        {
+          "time": 7.174133220389805,
+          "duration": 0.330708,
+          "value": {
+            "label": "AMGO",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC582147_1_1 - American Goldfinch - Spinus tristis.wav",
+            "source_time": 0,
+            "event_time": 7.174133220389805,
+            "event_duration": 0.330708,
+            "snr": 6.262002726676037,
+            "role": "foreground",
+            "pitch_shift": null,
+            "time_stretch": null
+          },
+          "confidence": 1.0
+        },
+        {
+          "time": 7.535515942570863,
+          "duration": 2.228583,
           "value": {
             "label": "RCKI",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC695300 - Ruby-crowned Kinglet - Regulus calendula.wav",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC175095 - Ruby-crowned Kinglet - Regulus calendula.wav",
             "source_time": 0,
-            "event_time": 8.198109638913449,
-            "event_duration": 1.801890361086551,
-            "snr": 10.792759836465336,
+            "event_time": 7.535515942570863,
+            "event_duration": 2.228583,
+            "snr": 19.43655105416746,
+            "role": "foreground",
+            "pitch_shift": null,
+            "time_stretch": null
+          },
+          "confidence": 1.0
+        },
+        {
+          "time": 8.54786985616159,
+          "duration": 0.17573696145124718,
+          "value": {
+            "label": "WBNU",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC72047 - White-breasted Nuthatch - Sitta carolinensis alexandrae_1.wav",
+            "source_time": 0,
+            "event_time": 8.54786985616159,
+            "event_duration": 0.17573696145124718,
+            "snr": 21.579690607997048,
             "role": "foreground",
             "pitch_shift": null,
             "time_stretch": null
@@ -91,11 +187,11 @@
             [
               [
                 "const",
-                "AMGO"
+                "RCKI"
               ],
               [
                 "const",
-                "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC612292 - American Goldfinch - Spinus tristis.wav"
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC175095 - Ruby-crowned Kinglet - Regulus calendula.wav"
               ],
               [
                 "const",
@@ -103,11 +199,221 @@
               ],
               [
                 "const",
-                4.581021295300507
+                7.535515942570863
               ],
               [
                 "const",
-                5.418978704699493
+                2.228583
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "AMGO"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC612292_1_2 - American Goldfinch - Spinus tristis.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                5.224286979290272
+              ],
+              [
+                "const",
+                0.378
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "WBNU"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC72047 - White-breasted Nuthatch - Sitta carolinensis alexandrae_1.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                8.54786985616159
+              ],
+              [
+                "const",
+                0.175737
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "AMGO"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC612292_1_3 - American Goldfinch - Spinus tristis.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                5.494896659624892
+              ],
+              [
+                "const",
+                0.399354
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "AMGO"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC582147_1_1 - American Goldfinch - Spinus tristis.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                7.174133220389805
+              ],
+              [
+                "const",
+                0.330708
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "WBNU"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC443271 - White-breasted Nuthatch - Sitta carolinensis aculeata.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                6.9688509853336065
+              ],
+              [
+                "const",
+                2.55675
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "WBNU"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC72047 - White-breasted Nuthatch - Sitta carolinensis alexandrae_1.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                6.732740763169459
+              ],
+              [
+                "const",
+                0.175737
+              ],
+              [
+                "uniform",
+                6,
+                30
+              ],
+              "foreground",
+              null,
+              null
+            ],
+            [
+              [
+                "const",
+                "AMGO"
+              ],
+              [
+                "const",
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/AMGO/XC582147_3_0 - American Goldfinch - Spinus tristis.wav"
+              ],
+              [
+                "const",
+                0
+              ],
+              [
+                "const",
+                1.8229763269049146
+              ],
+              [
+                "const",
+                0.739437
               ],
               [
                 "uniform",
@@ -133,41 +439,11 @@
               ],
               [
                 "const",
-                1.643365147194422
+                3.382041528017237
               ],
               [
                 "const",
-                4.512
-              ],
-              [
-                "uniform",
-                6,
-                30
-              ],
-              "foreground",
-              null,
-              null
-            ],
-            [
-              [
-                "const",
-                "RCKI"
-              ],
-              [
-                "const",
-                "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC695300 - Ruby-crowned Kinglet - Regulus calendula.wav"
-              ],
-              [
-                "const",
-                0
-              ],
-              [
-                "const",
-                8.198109638913449
-              ],
-              [
-                "const",
-                1.801890361086551
+                0.882896
               ],
               [
                 "uniform",
@@ -187,7 +463,7 @@
               ],
               [
                 "const",
-                "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile374.wav"
+                "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile661.wav"
               ],
               [
                 "const",
@@ -224,9 +500,9 @@
           "n_channels": 1,
           "fade_in_len": 0.01,
           "fade_out_len": 0.01,
-          "n_events": 3,
-          "polyphony_max": 2,
-          "polyphony_gini": 0.692623771189292,
+          "n_events": 9,
+          "polyphony_max": 3,
+          "polyphony_gini": 0.42749945610756224,
           "allow_repeated_label": true,
           "allow_repeated_source": true,
           "reverb": null,
@@ -234,9 +510,15 @@
           "soundscape_audio_path": "/home/fumchin/data/bsed/dataset/SYN/generated/79.wav",
           "isolated_events_audio_path": [
             "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/background0_NIP4.wav",
-            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground0_WBNU.wav",
-            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground1_AMGO.wav",
-            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground2_RCKI.wav"
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground0_AMGO.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground1_WBNU.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground2_AMGO.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground3_AMGO.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground4_WBNU.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground5_WBNU.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground6_AMGO.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground7_RCKI.wav",
+            "/home/fumchin/data/bsed/dataset/SYN/generated/79_events/foreground8_WBNU.wav"
           ],
           "audio_path": "/home/fumchin/data/bsed/dataset/SYN/generated/79.wav",
           "jams_path": "/home/fumchin/data/bsed/dataset/SYN/generated/79.jams",

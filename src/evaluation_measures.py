@@ -143,8 +143,12 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
         prediction_dfs[threshold] = pd.DataFrame()
 
     filename_list = []
+    annotation_folder_list = []
     # Get predictions
-    for i, (((input_data, label), indexes), filename) in enumerate(dataloader):
+    for i, (((input_data, label), indexes), selected_file_path) in enumerate(dataloader):
+        filename = [os.path.splitext(os.path.basename(file))[0] for file in selected_file_path]
+        annotation_folder = [os.path.dirname(os.path.dirname(file)) for file in selected_file_path]
+        annotation_folder = [os.path.join(folder, "annotation") for folder in annotation_folder]
         indexes = indexes.numpy()
         # test_lab = decoder(indexes)
         # kk_ = decoder(kk[i,:,:])
@@ -204,6 +208,9 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
                     logger.debug("predictions strong: \n{}".format(pred_strong_it))
         
         filename_list = filename_list + list(filename)
+        annotation_folder_list = annotation_folder_list + list(annotation_folder)
+
+        # print(len(filename_list))
         # groundtruth file and duration file
     filename_list = list(dict.fromkeys(filename_list))
     duration_df = pd.DataFrame(filename_list, columns=['filename'])
@@ -212,17 +219,22 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
     duration_df.loc[duration_df["duration"]== "",'duration'] = 10
     groundtruth_df = None
     for file_count, file in enumerate(filename_list):
+        annotation_file_path = glob(os.path.join(annotation_folder_list[file_count], file + ".txt"))[0]
         if file_count == 0:
-            groundtruth_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
+            # groundtruth_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
+            groundtruth_df = pd.read_csv(annotation_file_path, sep="\t")
+            groundtruth_df.rename(columns = {'Begin Time (s)':'onset', 'End Time (s)':'offset', 'Species':'event_label'}, inplace = True)
             groundtruth_df["filename"] = ""
             groundtruth_df.loc[groundtruth_df["filename"]== "",'filename'] = file
         else:
-            temp_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
+            # temp_df = pd.read_csv(osp.join(cfg.annotation_dir, file+'.txt'), sep="\t")
+            temp_df = pd.read_csv(annotation_file_path, sep="\t")
+            temp_df.rename(columns = {'Begin Time (s)':'onset', 'End Time (s)':'offset', 'Species':'event_label'}, inplace = True)
             temp_df["filename"] = ""
             temp_df.loc[temp_df["filename"]== "",'filename'] = file
             groundtruth_df = pd.concat([groundtruth_df, temp_df], ignore_index=True)
             
-    groundtruth_df.rename(columns = {'Begin Time (s)':'onset', 'End Time (s)':'offset', 'Species':'event_label'}, inplace = True)
+    # groundtruth_df.rename(columns = {'Begin Time (s)':'onset', 'End Time (s)':'offset', 'Species':'event_label'}, inplace = True)
     # duration_filename = filename+".wav"
     # duration_df = duration_df.append({'filename':(duration_filename), 'duration':int(10)}, ignore_index=True)
     # if i == 0:

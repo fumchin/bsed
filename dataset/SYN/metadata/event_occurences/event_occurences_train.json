@@ -2,8 +2,8 @@
     "RCKI": {
       "proba": 0.3,
       "co-occurences": {
-        "max_events": 5,
-        "mean_events": 2,
+        "max_events": 10,
+        "mean_events": 5,
         "classes": [
             "WBNU",
             "AMGO"
@@ -17,8 +17,8 @@
     "WBNU": {
         "proba": 0.3,
         "co-occurences": {
-          "max_events": 5,
-          "mean_events": 2,
+          "max_events": 10,
+          "mean_events": 5,
           "classes": [
               "RCKI",
               "AMGO"
@@ -32,8 +32,8 @@
       "AMGO": {
           "proba": 0.4,
           "co-occurences": {
-            "max_events": 5,
-            "mean_events": 2,
+            "max_events": 10,
+            "mean_events": 5,
             "classes": [
                 "RCKI",
                 "WBNU"

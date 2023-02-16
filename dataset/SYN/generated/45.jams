@@ -21,7 +21,7 @@
           "duration": 10.0,
           "value": {
             "label": "NIP4",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile117.wav",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile575.wav",
             "source_time": 0,
             "event_time": 0,
             "event_duration": 10.0,
@@ -33,15 +33,15 @@
           "confidence": 1.0
         },
         {
-          "time": 2.869908596376817,
-          "duration": 7.130091403623183,
+          "time": 2.8702056503745506,
+          "duration": 3.1614166666666668,
           "value": {
-            "label": "WBNU",
-            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC72047 - White-breasted Nuthatch - Sitta carolinensis alexandrae.wav",
+            "label": "RCKI",
+            "source_file": "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC628827_0 - Ruby-crowned Kinglet - Regulus calendula calendula.wav",
             "source_time": 0,
-            "event_time": 2.869908596376817,
-            "event_duration": 7.130091403623183,
-            "snr": 20.896091375504334,
+            "event_time": 2.8702056503745506,
+            "event_duration": 3.1614166666666668,
+            "snr": 7.048677695059205,
             "role": "foreground",
             "pitch_shift": null,
             "time_stretch": null
@@ -59,11 +59,11 @@
             [
               [
                 "const",
-                "WBNU"
+                "RCKI"
               ],
               [
                 "const",
-                "/home/fumchin/data/bsed/dataset/SYN/foreground/WBNU/XC72047 - White-breasted Nuthatch - Sitta carolinensis alexandrae.wav"
+                "/home/fumchin/data/bsed/dataset/SYN/foreground/RCKI/XC628827_0 - Ruby-crowned Kinglet - Regulus calendula calendula.wav"
               ],
               [
                 "const",
@@ -71,11 +71,11 @@
               ],
               [
                 "const",
-                2.869908596376817
+                2.8702056503745506
               ],
               [
                 "const",
-                7.130091403623183
+                3.161417
               ],
               [
                 "uniform",
@@ -95,7 +95,7 @@
               ],
               [
                 "const",
-                "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile117.wav"
+                "/home/fumchin/data/bsed/dataset/SYN/background/NIP4/nips4b_birds_trainfile575.wav"
               ],
               [
                 "const",
@@ -134,7 +134,7 @@
           "fade_out_len": 0.01,
           "n_events": 1,
           "polyphony_max": 1,
-          "polyphony_gini": 0.7130004025239796,
+          "polyphony_gini": 0.3160021645501121,
           "allow_repeated_label": true,
           "allow_repeated_source": true,
           "reverb": null,
@@ -142,7 +142,7 @@
           "soundscape_audio_path": "/home/fumchin/data/bsed/dataset/SYN/generated/45.wav",
           "isolated_events_audio_path": [
             "/home/fumchin/data/bsed/dataset/SYN/generated/45_events/background0_NIP4.wav",
-            "/home/fumchin/data/bsed/dataset/SYN/generated/45_events/foreground0_WBNU.wav"
+            "/home/fumchin/data/bsed/dataset/SYN/generated/45_events/foreground0_RCKI.wav"
           ],
           "audio_path": "/home/fumchin/data/bsed/dataset/SYN/generated/45.wav",
           "jams_path": "/home/fumchin/data/bsed/dataset/SYN/generated/45.jams",

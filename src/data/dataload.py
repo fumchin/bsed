@@ -53,7 +53,7 @@ class ENA_Dataset(Dataset):
             sample = self.transform((features, target))
         else:
             sample = (features, target)
-        return (sample, feature_file_name)
+        return (sample, selected_file_path)
         
         
         pass
@@ -110,6 +110,10 @@ class SYN_Dataset(Dataset):
         # read with pandas
         df = pd.read_csv(annotation_file_path, sep="\t")
         # target = self.encode(df)
+        df.rename(
+            columns={"onset": "Begin Time (s)", "offset": "End Time (s)", "event_label": "Species"},
+            inplace=True,
+        )
         if self.encod_func is not None:
             target = self.encod_func(df)
         else:
@@ -120,7 +124,7 @@ class SYN_Dataset(Dataset):
             sample = self.transform((features, target))
         else:
             sample = (features, target)
-        return (sample, feature_file_name)
+        return (sample, selected_file_path)
         
         
         pass
