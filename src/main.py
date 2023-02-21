@@ -506,8 +506,8 @@ def train(train_loader, model, optimizer, c_epoch, ema_model=None, ema_predictor
 
 if __name__ == '__main__':
     # CUDA_VISIBLE_DEVICES=1
-    torch.manual_seed(2020)
-    np.random.seed(2020)
+    torch.manual_seed(2023)
+    np.random.seed(2023)
     logger = create_logger(__name__ + "/" + inspect.currentframe().f_code.co_name, terminal_level=cfg.terminal_level)
     logger.info("BSED 2022")
     logger.info(f"Starting time: {datetime.datetime.now()}")
@@ -612,7 +612,7 @@ if __name__ == '__main__':
     # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
     dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     syn_dataset = SYN_Dataset(preprocess_dir=cfg.synth_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    train_data, val_data = train_test_split(dataset, random_state=810, train_size=0.75)
+    train_data, val_data = train_test_split(dataset, random_state=1215, train_size=0.5)
     
     if cfg.syn_or_not == True:
         train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
