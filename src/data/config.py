@@ -41,8 +41,8 @@ in_memory_unlab = False
 num_workers = 12
 batch_size = 36
 
-model_name = "CRNN_0221_syn_half_dataset"
-syn_or_not = True
+model_name = "CRNN_0221_half_dataset"
+syn_or_not = False
 n_epoch = 300 #, variance after 100 may be too large
 n_epoch_rampup = 70
 n_epoch_rampdown = 80
