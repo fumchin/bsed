@@ -2,7 +2,7 @@
 import argparse
 import os.path as osp
 
-import torch, torch.nn
+import torch
 # from psds_eval import PSDSEval
 from torch.utils.data import DataLoader
 import numpy as np
@@ -40,20 +40,15 @@ def _load_crnn(state, model_name="model", use_fpn=False):
         crnn = CRNN(*crnn_args, **crnn_kwargs)
 
     # if "ADDA" in model_path:
-    # if not use_fpn:
-    # for key in list(expe_state["model"]["state_dict"].keys()):
-    #     if 'cnn.' in key:
-    #         expe_state["model"]["state_dict"][key.replace('cnn.', 'cnn.cnn.')] = expe_state["model"]["state_dict"][key]
-    #         del expe_state["model"]["state_dict"][key]
-    if not use_fpn:        
-        for key in list(state["model"]["state_dict"].keys()):
+    if not use_fpn:
+        for key in list(expe_state["model"]["state_dict"].keys()):
             if 'cnn.' in key:
-                state["model"]["state_dict"][key.replace('cnn.', 'cnn.cnn.')] = state["model"]["state_dict"][key]
-                del state["model"]["state_dict"][key]
+                expe_state["model"]["state_dict"][key.replace('cnn.', 'cnn.cnn.')] = expe_state["model"]["state_dict"][key]
+                del expe_state["model"]["state_dict"][key]
 
     crnn.load_state_dict(state[model_name]["state_dict"])
     crnn.eval()
-    crnn = to_cuda_if_available(crnn)
+    crnn = torch.nn.to_cuda_if_available(crnn)
     logger.info("Model loaded at epoch: {}".format(state["epoch"]))
     logger.info(crnn)
     return crnn
@@ -72,20 +67,20 @@ def _load_scaler(state):
     return scaler
 
 
-def _load_state_vars(state, median_win=None, use_fpn=False, use_predictor=False):
-    # pred_df = gtruth_df.copy()
+def _load_state_vars(state, gtruth_df, median_win=None, use_fpn=False, use_predictor=False):
+    pred_df = gtruth_df.copy()
     # Define dataloader
     many_hot_encoder = ManyHotEncoder.load_state_dict(state["many_hot_encoder"])
-    # scaler = _load_scaler(state)
+    scaler = _load_scaler(state)
     crnn = _load_crnn(state, use_fpn=use_fpn)
-    # transforms_valid = get_transforms(cfg.max_frames, scaler=scaler, add_axis=0)
+    transforms_valid = get_transforms(cfg.max_frames, scaler=scaler, add_axis=0)
     
-    # strong_dataload = DataLoadDf(pred_df, many_hot_encoder.encode_strong_df, transforms_valid, return_indexes=True)
-    # strong_dataloader_ind = DataLoader(strong_dataload, batch_size=cfg.batch_size, drop_last=False, shuffle=False)
+    strong_dataload = DataLoadDf(pred_df, many_hot_encoder.encode_strong_df, transforms_valid, return_indexes=True)
+    strong_dataloader_ind = DataLoader(strong_dataload, batch_size=cfg.batch_size, drop_last=False, shuffle=False)
 
-    # # weak dataloader
-    # weak_dataload = DataLoadDf(pred_df, many_hot_encoder.encode_weak, transforms_valid, return_indexes=True)
-    # weak_dataloader_ind = DataLoader(weak_dataload, batch_size=cfg.batch_size, drop_last=False, shuffle=False)
+    # weak dataloader
+    weak_dataload = DataLoadDf(pred_df, many_hot_encoder.encode_weak, transforms_valid, return_indexes=True)
+    weak_dataloader_ind = DataLoader(weak_dataload, batch_size=cfg.batch_size, drop_last=False, shuffle=False)
 
     pooling_time_ratio = state["pooling_time_ratio"]
     many_hot_encoder = ManyHotEncoder.load_state_dict(state["many_hot_encoder"])
@@ -94,8 +89,8 @@ def _load_state_vars(state, median_win=None, use_fpn=False, use_predictor=False)
     if use_predictor == False:
         return {
             "model": crnn,
-            # "strong_dataloader": strong_dataloader_ind,
-            # "weak_dataloader": weak_dataloader_ind,
+            "strong_dataloader": strong_dataloader_ind,
+            "weak_dataloader": weak_dataloader_ind,
             "pooling_time_ratio": pooling_time_ratio,
             "many_hot_encoder": many_hot_encoder,
             "median_window": median_win,
@@ -111,8 +106,8 @@ def _load_state_vars(state, median_win=None, use_fpn=False, use_predictor=False)
         predictor = to_cuda_if_available(predictor)
         return {
             "model": crnn,
-            # "strong_dataloader": strong_dataloader_ind,
-            # "weak_dataloader": weak_dataloader_ind,
+            "strong_dataloader": strong_dataloader_ind,
+            "weak_dataloader": weak_dataloader_ind,
             "pooling_time_ratio": pooling_time_ratio,
             "many_hot_encoder": many_hot_encoder,
             "median_window": median_win,
@@ -151,9 +146,9 @@ def get_variables(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("-m", '--model_path', type=str, required=None,
+    parser.add_argument("-m", '--model_path', type=str, required=True,
                         help="Path of the model to be evaluated")
-    parser.add_argument("-g", '--groundtruth_tsv', type=str, required=None,
+    parser.add_argument("-g", '--groundtruth_tsv', type=str, required=True,
                         help="Path of the groundtruth tsv file")
 
     # Not required after that, but recommended to defined
@@ -176,7 +171,7 @@ if __name__ == '__main__':
     parser.add_argument("-fpn", '--use_fpn', action="store_true",
                     help="Whether to use CRNN_fpn architecture.")  
     # Use predictor
-    parser.add_argument("-pd", '--use_predictor', default=True,
+    parser.add_argument("-pd", '--use_predictor', action="store_true",
                     help="Whether to use label predictor.")
     # Dir to save embedding feature
     parser.add_argument("-sf", '--saved_feature_dir', type=str, default=None,
@@ -184,27 +179,24 @@ if __name__ == '__main__':
 
     f_args = parser.parse_args()
     # Get variables from f_args
-    # median_window, use_fpn, use_predictor = get_variables(f_args)
-    median_window = f_args.median_window
-    use_fpn = f_args.use_fpn
-    use_predictor = f_args.use_predictor
-    model_path = os.path.join("/home/fumchin/data/bsed/src/stored_data", cfg.test_model_name, "model", "baseline_best")
-    # if f_args.groundtruth_tsv.split('/')[-1] == 'validation.tsv':
-    #     data_type = 'strong'
-    # elif f_args.groundtruth_tsv.split('/')[-1]== 'weak.tsv':
-    #     data_type = 'weak'
-    # elif f_args.groundtruth_tsv.split('/')[-1] == 'soundscapes.tsv':
-    #     data_type = 'synth'
-    # elif f_args.groundtruth_tsv.split('/')[-1] == 'output.tsv':
-    #     data_type = 'synth'
-    # elif f_args.groundtruth_tsv.split('/')[-1] == 'validation_single.tsv':
-    #     data_type = 'strong'
-    # elif f_args.groundtruth_tsv.split('/')[-1] == 'soundscapes_single.tsv':
-    #     data_type = 'synth'
+    model_path, median_window, gt_audio_dir, groundtruth, durations, use_fpn, use_predictor = get_variables(f_args)
 
-    # saved_feature_dir = os.path.join(f_args.saved_feature_dir, data_type)
-    # if not os.path.exists(saved_feature_dir):
-    #     os.makedirs(saved_feature_dir, exist_ok=True)
+    if f_args.groundtruth_tsv.split('/')[-1] == 'validation.tsv':
+        data_type = 'strong'
+    elif f_args.groundtruth_tsv.split('/')[-1]== 'weak.tsv':
+        data_type = 'weak'
+    elif f_args.groundtruth_tsv.split('/')[-1] == 'soundscapes.tsv':
+        data_type = 'synth'
+    elif f_args.groundtruth_tsv.split('/')[-1] == 'output.tsv':
+        data_type = 'synth'
+    elif f_args.groundtruth_tsv.split('/')[-1] == 'validation_single.tsv':
+        data_type = 'strong'
+    elif f_args.groundtruth_tsv.split('/')[-1] == 'soundscapes_single.tsv':
+        data_type = 'synth'
+
+    saved_feature_dir = os.path.join(f_args.saved_feature_dir, data_type)
+    if not os.path.exists(saved_feature_dir):
+        os.makedirs(saved_feature_dir, exist_ok=True)
     
 
     # Model
@@ -216,41 +208,32 @@ if __name__ == '__main__':
     # dataset = DESED(base_feature_dir=osp.join(cfg.workspace, "dataset", "features"), compute_log=False)
     # scaler = _load_scaler(state)
     # transforms = get_transforms(cfg.max_frames, None, add_axis_conv, noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
-    transforms = get_transforms(cfg.max_frames, None, add_axis_conv,
-                                noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
-    val_dataset = ENA_Dataset(preprocess_dir=cfg.val_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    # train_data, val_data = train_test_split(dataset, random_state=cfg.dataset_random_seed, train_size=0.5)
+    transforms_valid = get_transforms(cfg.max_frames, scaler=None, add_axis=0)
+    dataset = ENA_Dataset(preprocess_dir=cfg.synth_feature_dir, encod_func=encod_func, transform=transforms_valid, compute_log=True)
+    train_data, val_data = train_test_split(dataset, random_state=cfg.dataset_random_seed, train_size=0.5)
     
-    val_dataloader = DataLoader(val_dataset, batch_size=cfg.batch_size, shuffle=False)
-    # train_dataloader = DataLoader(train_data, batch_size=cfg.batch_size, shuffle=True)
-    # gt_df_feat = dataset.initialize_and_get_df(f_args.groundtruth_tsv, gt_audio_dir, nb_files=f_args.nb_files)
-    params = _load_state_vars(expe_state, median_window, use_fpn, use_predictor)
+    
+    gt_df_feat = dataset.initialize_and_get_df(f_args.groundtruth_tsv, gt_audio_dir, nb_files=f_args.nb_files)
+    params = _load_state_vars(expe_state, gt_df_feat, median_window, use_fpn, use_predictor)
 
     # Preds with only one value
     if use_fpn:
-        # single_predictions = get_predictions(params["model"], val_dataloader,
-        #                                     params["many_hot_encoder"].decode_strong, params["pooling_time_ratio"],
-        #                                     median_window=params["median_window"],
-        #                                     save_predictions=f_args.save_predictions_path,
-        #                                     predictor=params["predictor"], fpn=True, saved_feature_dir=None)
-        valid_predictions, validation_labels_df, durations_validation = get_predictions(params["model"], val_dataloader,
+        single_predictions = get_predictions(params["model"], val_data,
                                             params["many_hot_encoder"].decode_strong, params["pooling_time_ratio"],
                                             median_window=params["median_window"],
                                             save_predictions=f_args.save_predictions_path,
-                                            predictor=params["predictor"], fpn=True, saved_feature_dir=None)
+                                            predictor=params["predictor"], fpn=True, saved_feature_dir=saved_feature_dir)
     else:
-        valid_predictions, validation_labels_df, durations_validation = get_predictions(params["model"], val_dataloader,
+        single_predictions = get_predictions(params["model"], val_data,
                                             params["many_hot_encoder"].decode_strong, params["pooling_time_ratio"],
                                             median_window=params["median_window"],
                                             save_predictions=f_args.save_predictions_path,
-                                            predictor=params["predictor"], saved_feature_dir=None)
-    ct_matrix, valid_real_f1, psds_real_f1 = compute_metrics(valid_predictions, validation_labels_df, durations_validation)
+                                            predictor=params["predictor"], saved_feature_dir=saved_feature_dir)
+    compute_metrics(single_predictions, groundtruth, durations)
     
-    ct_matrix_df = pd.DataFrame(ct_matrix, columns=(sorted(cfg.bird_list) + ["World"]), index=(sorted(cfg.bird_list) + ["World"]))
-    ct_matrix_df.to_csv(os.path.join("/home/fumchin/data/bsed/src/stored_data", cfg.test_model_name, "confusion_matrix.csv"), float_format='%d')
     # Evaluate audio tagging
-    # weak_metric = get_f_measure_by_class(params["model"], len(cfg.classes), params["weak_dataloader"], predictor=params["predictor"])
-    # print("Weak F1-score per class: \n {}".format(pd.DataFrame(weak_metric * 100, params["many_hot_encoder"].labels)))
-    # print("Weak F1-score macro averaged: {}".format(np.mean(weak_metric)))
-    # pdb.set_trace()
+    weak_metric = get_f_measure_by_class(params["model"], len(cfg.classes), params["weak_dataloader"], predictor=params["predictor"])
+    print("Weak F1-score per class: \n {}".format(pd.DataFrame(weak_metric * 100, params["many_hot_encoder"].labels)))
+    print("Weak F1-score macro averaged: {}".format(np.mean(weak_metric)))
+    pdb.set_trace()
  

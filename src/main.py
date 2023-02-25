@@ -609,18 +609,20 @@ if __name__ == '__main__':
 
     transforms = get_transforms(cfg.max_frames, None, add_axis_conv,
                                 noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
-    # transforms_valid = get_transforms(cfg.max_frames, scaler, add_axis_conv)
-    dataset = ENA_Dataset(preprocess_dir=cfg.feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
+    transforms_valid = get_transforms(cfg.max_frames, None, add_axis_conv)
+
+    train_dataset = ENA_Dataset(preprocess_dir=cfg.train_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
+    val_dataset = ENA_Dataset(preprocess_dir=cfg.val_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     syn_dataset = SYN_Dataset(preprocess_dir=cfg.synth_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    train_data, val_data = train_test_split(dataset, random_state=1215, train_size=0.5)
+    # train_data, val_data = train_test_split(dataset, random_state=cfg.dataset_random_seed, train_size=0.5)
     
     if cfg.syn_or_not == True:
-        train_dataset = torch.utils.data.ConcatDataset([train_data, syn_dataset])
+        train_dataset = torch.utils.data.ConcatDataset([train_dataset, syn_dataset])
     else:
-        train_dataset = train_data
+        train_dataset = train_dataset
     
-    train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_data, batch_size=cfg.batch_size, shuffle=False)
+    train_dataloader = DataLoader(syn_dataset, batch_size=cfg.batch_size, shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=cfg.batch_size, shuffle=False)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)
     # unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms, in_memory=cfg.in_memory_unlab)
     # train_synth_data = DataLoadDf(dfs["train_synthetic"], encod_func, transforms, in_memory=cfg.in_memory)
@@ -886,7 +888,7 @@ if __name__ == '__main__':
         ct_matrix, valid_real_f1, psds_real_f1 = compute_metrics(valid_predictions, validation_labels_df, durations_validation)
         writer.add_scalar('Real Validation F1-score', valid_real_f1, epoch)
         print("cross-trigger confusion matrix")
-        print_ct_matrix(ct_matrix)
+        # print_ct_matrix(ct_matrix)
         # Evaluate weak
         # weak_metric = get_f_measure_by_class(crnn, len(cfg.classes), validation_dataloader_weak, predictor=predictor)
         # writer.add_scalar("Weak F1-score macro averaged", np.mean(weak_metric), epoch)  

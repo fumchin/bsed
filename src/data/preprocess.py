@@ -6,6 +6,8 @@ import threading
 import librosa
 import pandas as pd
 import numpy as np
+import random
+import shutil
 
 
 import config as cfg
@@ -176,11 +178,52 @@ def ena_data_preprocess(dataset_root):
             # print(domain_name + " done")
     print("end")
     # pass
-def syn_data_preprocess():
-    pass
+def data_split(dataset_root):
+    
+    random.seed(1215)
 
+    saved_path = os.path.join(cfg.dataset_root, "preprocess")
+    mel_saved_path = os.path.join(saved_path, "wav")
+    annotation_saved_path = os.path.join(saved_path, "annotation")
+    
+    train_saved_path = os.path.join(cfg.dataset_root, "train_preprocess")
+    train_mel_saved_path = os.path.join(train_saved_path, "wav")
+    train_annotation_saved_path = os.path.join(train_saved_path, "annotation")
+
+    if not os.path.exists(train_mel_saved_path):
+        os.makedirs(train_mel_saved_path)
+        os.makedirs(train_annotation_saved_path)
+
+    val_saved_path = os.path.join(cfg.dataset_root, "val_preprocess")
+    val_mel_saved_path = os.path.join(val_saved_path, "wav")
+    val_annotation_saved_path = os.path.join(val_saved_path, "annotation")
+    
+    if not os.path.exists(val_mel_saved_path):
+        os.makedirs(val_mel_saved_path)
+        os.makedirs(val_annotation_saved_path)
+
+
+    total_mel_file_list = glob(os.path.join(mel_saved_path, "*.npy"))
+    
+    train_mel_set =  set(random.sample(set(total_mel_file_list), int(len(total_mel_file_list)/2)))
+    val_mel_set = set(total_mel_file_list) - train_mel_set
+    
+    # print(len(train_mel_set))
+    for mel_file_path in train_mel_set:
+        file_name = os.path.splitext(os.path.basename(mel_file_path))[0]
+        annotation_file_path = glob(os.path.join(annotation_saved_path, file_name + ".txt"))[0]
+        shutil.copy(mel_file_path, train_mel_saved_path)
+        shutil.copy(annotation_file_path, train_annotation_saved_path)
+        # print(annotation_file_path)
+
+    for mel_file_path in val_mel_set:
+        file_name = os.path.splitext(os.path.basename(mel_file_path))[0]
+        annotation_file_path = glob(os.path.join(annotation_saved_path, file_name + ".txt"))[0]
+        shutil.copy(mel_file_path, val_mel_saved_path)
+        shutil.copy(annotation_file_path, val_annotation_saved_path)
 
 if __name__ == '__main__':
     dataset_root = cfg.dataset_root
-    ena_data_preprocess(cfg.dataset_root)
-    syn_data_preprocess()
+    # ena_data_preprocess(cfg.dataset_root)
+    data_split(cfg.dataset_root)
+    # syn_data_preprocess()

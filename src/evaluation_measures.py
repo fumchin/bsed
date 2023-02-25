@@ -145,11 +145,18 @@ def get_predictions(model, dataloader, decoder, pooling_time_ratio=1, thresholds
     filename_list = []
     annotation_folder_list = []
     # Get predictions
-    for i, (((input_data, label), indexes), selected_file_path) in enumerate(dataloader):
+    for i, (((input_data, ema_input_data), target), selected_file_path) in enumerate(dataloader):
+    # for i, data in enumerate(dataloader):
+    #     print(type(data))
+    #     input_data = ((data[0])[0])
+    #     # ema_input_data = ((data[0])[0])[1]
+    #     target = (data[0])[1]
+    #     selected_file_path = data[1]
+
         filename = [os.path.splitext(os.path.basename(file))[0] for file in selected_file_path]
         annotation_folder = [os.path.dirname(os.path.dirname(file)) for file in selected_file_path]
         annotation_folder = [os.path.join(folder, "annotation") for folder in annotation_folder]
-        indexes = indexes.numpy()
+        # indexes = indexes.numpy()
         # test_lab = decoder(indexes)
         # kk_ = decoder(kk[i,:,:])
         input_data = to_cuda_if_available(input_data)

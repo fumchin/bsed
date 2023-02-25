@@ -6,6 +6,13 @@ dataset_root = "/home/fumchin/data/bsed/dataset/ENA"
 feature_dir = os.path.join(dataset_root, "preprocess")
 annotation_dir = os.path.join(feature_dir, "annotation")
 
+train_feature_dir = os.path.join(dataset_root, "train_preprocess")
+train_annotation_dir = os.path.join(train_feature_dir, "annotation")
+
+val_feature_dir = os.path.join(dataset_root, "val_preprocess")
+val_annotation_dir = os.path.join(val_feature_dir, "annotation")
+
+
 syn_feature_dir = os.path.join("/home/fumchin/data/bsed/dataset/SYN", "preprocess")
 
 synth_dataset_root = "/home/fumchin/data/bsed/dataset/SYN"
@@ -41,11 +48,13 @@ in_memory_unlab = False
 num_workers = 12
 batch_size = 36
 
-model_name = "CRNN_0221_half_dataset"
-syn_or_not = False
+model_name = "CRNN_0224_half_only_syn_2000"
+test_model_name = "CRNN_0224_half_syn_2000"
+syn_or_not = True
 n_epoch = 300 #, variance after 100 may be too large
 n_epoch_rampup = 70
 n_epoch_rampdown = 80
+dataset_random_seed = 1215
 
 checkpoint_epochs = 1
 save_best = True
