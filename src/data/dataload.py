@@ -1,3 +1,4 @@
+import bisect
 import os
 import os.path
 import numpy as np
@@ -150,7 +151,66 @@ class SYN_Dataset(Dataset):
                 offset = int(row["offset"] * self.sample_rate // self.hop_size // self.pooling_time_ratio)
                 y[onset:offset, i] = 1  # means offset not included (hypothesis of overlapping frames, so ok)
         return y
-        
+
+class ConcatDataset(Dataset):
+    """
+    DESED to concatenate multiple datasets.
+    Purpose: useful to assemble different existing datasets, possibly
+    large-scale datasets as the concatenation operation is done in an
+    on-the-fly manner.
+
+    Args:
+        datasets : sequence, list of datasets to be concatenated
+    """
+
+    @staticmethod
+    def cumsum(sequence):
+        r, s = [], 0
+        for e in sequence:
+            l = len(e)
+            r.append(l + s)
+            s += l
+        return r
+
+    @property
+    def cluster_indices(self):
+        cluster_ind = []
+        prec = 0
+        for size in self.cumulative_sizes:
+            cluster_ind.append(range(prec, size))
+            prec = size
+        return cluster_ind
+
+    def __init__(self, datasets):
+        assert len(datasets) > 0, 'datasets should not be an empty iterable'
+        self.datasets = list(datasets)
+        self.cumulative_sizes = self.cumsum(self.datasets)
+
+    def __len__(self):
+        return self.cumulative_sizes[-1]
+
+    def __getitem__(self, idx):
+        dataset_idx = bisect.bisect_right(self.cumulative_sizes, idx)
+        if dataset_idx == 0:
+            sample_idx = idx
+        else:
+            sample_idx = idx - self.cumulative_sizes[dataset_idx - 1]
+        return self.datasets[dataset_idx][sample_idx]
+
+    @property
+    def cummulative_sizes(self):
+        warnings.warn("cummulative_sizes attribute is renamed to "
+                      "cumulative_sizes", DeprecationWarning, stacklevel=2)
+        return self.cumulative_sizes
+
+    @property
+    def df(self):
+        df = self.datasets[0].df
+        for dataset in self.datasets[1:]:
+            df = pd.concat([df, dataset.df], axis=0, ignore_index=True, sort=False)
+        return df
+
+
 if __name__ == "__main__":
     # file_name = "Fuji_train_list.txt"
     # root = "/home/fumchin/data/cv/final/dataset"

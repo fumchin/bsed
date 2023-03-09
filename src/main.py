@@ -14,7 +14,7 @@ import torch
 from torch.utils.data import DataLoader
 from torch import nn
 
-from data.dataload import ENA_Dataset, SYN_Dataset
+from data.dataload import ENA_Dataset, SYN_Dataset, ConcatDataset
 from data.Transforms import get_transforms
 import data.config as cfg
 from sklearn.model_selection import train_test_split
@@ -29,7 +29,7 @@ from models.CRNN import CRNN_fpn, CRNN, Predictor, Frame_Discriminator, Clip_Dis
 
 from utilities import ramps
 from utilities.Logger import create_logger
-# from utilities.Scaler import ScalerPerAudio, Scaler
+from utilities.Scaler import ScalerPerAudio, Scaler
 from utilities.utils import SaveBest, to_cuda_if_available, weights_init, AverageMeterSet, EarlyStopping, \
     get_durations_df
 from utilities.ManyHotEncoder import ManyHotEncoder
@@ -594,34 +594,50 @@ if __name__ == '__main__':
 
     # # Normalisation per audio or on the full dataset
     # if cfg.scaler_type == "dataset":
-    #     transforms = get_transforms(cfg.max_frames, add_axis=add_axis_conv)
-    #     weak_data = DataLoadDf(dfs["weak"], encod_func, transforms)
-    #     unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms)
-    #     train_synth_data = DataLoadDf(dfs["train_synthetic"], encod_func, transforms)
-    #     scaler_args = []
-    #     scaler = Scaler()
-    #     # # Only on real data since that's our final goal and test data are real
-    #     scaler.calculate_scaler(ConcatDataset([weak_data, unlabel_data, train_synth_data]))
-    #     logger.debug(f"scaler mean: {scaler.mean_}")
+        # transforms = get_transforms(cfg.max_frames, add_axis=add_axis_conv)
+        # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms)
+        # unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms)
+        # train_synth_data = DataLoadDf(dfs["train_synthetic"], encod_func, transforms)
+        # scaler_args = []
+        # scaler = Scaler()
+        # # # Only on real data since that's our final goal and test data are real
+        # scaler.calculate_scaler(ConcatDataset([weak_data, unlabel_data, train_synth_data]))
+        # logger.debug(f"scaler mean: {scaler.mean_}")
     # else:
     #     scaler_args = ["global", "min-max"]
     #     scaler = ScalerPerAudio(*scaler_args)
 
-    transforms = get_transforms(cfg.max_frames, None, add_axis_conv,
-                                noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
+    transforms_scaler = get_transforms(cfg.max_frames, add_axis=add_axis_conv)
+    train_scaler_dataset = ENA_Dataset(preprocess_dir=cfg.train_feature_dir, encod_func=encod_func, transform=None, compute_log=True)
+    # val_scaler_dataset = ENA_Dataset(preprocess_dir=cfg.val_feature_dir, encod_func=encod_func, compute_log=True)
+    syn_scaler_dataset = SYN_Dataset(preprocess_dir=cfg.synth_feature_dir, encod_func=encod_func, transform=None, compute_log=True)
+
+
+    scaler_args = []
+    scaler = Scaler()
+    # # Only on real data since that's our final goal and test data are real
+    scaler.calculate_scaler(ConcatDataset([train_scaler_dataset, syn_scaler_dataset])) 
+    # train_data, val_data = train_test_split(dataset, random_state=cfg.dataset_random_seed, train_size=0.5)
+
+    transforms = get_transforms(cfg.max_frames, scaler, add_axis_conv,
+                            noise_dict_params={"mean": 0., "snr": cfg.noise_snr})
     transforms_valid = get_transforms(cfg.max_frames, None, add_axis_conv)
 
     train_dataset = ENA_Dataset(preprocess_dir=cfg.train_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     val_dataset = ENA_Dataset(preprocess_dir=cfg.val_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
     syn_dataset = SYN_Dataset(preprocess_dir=cfg.synth_feature_dir, encod_func=encod_func, transform=transforms, compute_log=True)
-    # train_data, val_data = train_test_split(dataset, random_state=cfg.dataset_random_seed, train_size=0.5)
     
+    
+    
+
     if cfg.syn_or_not == True:
         train_dataset = torch.utils.data.ConcatDataset([train_dataset, syn_dataset])
     else:
         train_dataset = train_dataset
     
-    train_dataloader = DataLoader(syn_dataset, batch_size=cfg.batch_size, shuffle=True)
+    
+    
+    train_dataloader = DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=cfg.batch_size, shuffle=False)
     # weak_data = DataLoadDf(dfs["weak"], encod_func, transforms, in_memory=cfg.in_memory)
     # unlabel_data = DataLoadDf(dfs["unlabel"], encod_func, transforms, in_memory=cfg.in_memory_unlab)
@@ -780,10 +796,10 @@ if __name__ == '__main__':
                     "kwargs": optim_kwargs,
                     'state_dict': optim_crnn.state_dict()},
             "pooling_time_ratio": pooling_time_ratio,
-            # "scaler": {
-            #     "type": type(scaler).__name__,
-            #     "args": scaler_args,
-            #     "state_dict": scaler.state_dict()},
+            "scaler": {
+                "type": type(scaler).__name__,
+                "args": scaler_args,
+                "state_dict": scaler.state_dict()},
             "many_hot_encoder": many_hot_encoder.state_dict(),
             "median_window": median_window,
             # "desed": dataset.state_dict()
@@ -815,10 +831,10 @@ if __name__ == '__main__':
                     "kwargs": optim_kwargs,
                     'state_dict': optim_crnn.state_dict()},
             "pooling_time_ratio": pooling_time_ratio,
-            # "scaler": {
-            #     "type": type(scaler).__name__,
-            #     "args": scaler_args,
-            #     "state_dict": scaler.state_dict()},
+            "scaler": {
+                "type": type(scaler).__name__,
+                "args": scaler_args,
+                "state_dict": scaler.state_dict()},
             "many_hot_encoder": many_hot_encoder.state_dict(),
             "median_window": median_window,
             # "desed": dataset.state_dict()

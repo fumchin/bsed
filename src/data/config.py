@@ -48,7 +48,7 @@ in_memory_unlab = False
 num_workers = 12
 batch_size = 36
 
-model_name = "CRNN_0224_half_only_syn_2000"
+model_name = "CRNN_0224_half_2000_scalar"
 test_model_name = "CRNN_0224_half_syn_2000"
 syn_or_not = True
 n_epoch = 300 #, variance after 100 may be too large
